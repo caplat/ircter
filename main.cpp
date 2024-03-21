@@ -24,19 +24,43 @@ int main(int argc, char** argv)
     std::cout << "_sockaddr.sa_family : " << _serv.sa_family << std::endl;
     
     hostent *_host;
-    _host =  gethostbyname("k0r3p8.42mulhouse.fr");
+    _host =  gethostbyname("k0r2p2.42mulhouse.fr");
     std::cout << "HOST" << std::endl;
     std::cout << "_host->h_addrtype : " << _host->h_addrtype << std::endl;
     std::cout << "_host->h_length : " <<_host->h_length << std::endl; 
     std::cout << "_PATH_HOSTS : " <<_PATH_HOSTS << std::endl;
 
     sockaddr_in _ser;
-    _ser.sin_port = htons(4242);
+    _ser.sin_port = htons(4263);
     _ser.sin_family = AF_INET;
     _ser.sin_addr.s_addr = htonl(INADDR_ANY);
     int _named = bind(_so, (sockaddr*) &_ser, sizeof(_ser));
     std::cout << "Try to bind socket" << std::endl;
     if (_named == -1)
         std::cout << _error << " : " << std::strerror(errno) << std::endl;
+    
+    if (listen(_so, 3) == -1)
+    {
+        std::cout << errno << std::strerror(errno) << std::endl;
+        return (-1);
+    }
+    socklen_t a = sizeof(_ser);
+    int b = accept(_so, (sockaddr*)&_ser, &a);
+    if (b == -1)
+    {
+        std::cout << errno << std::strerror(errno) << std::endl;
+        return (-1);
+    }
+    char _buff[256];
+    int n = read(b, _buff, 256);
+    std::cout << std::string(_buff) << std::endl;
+    if (n < 0)
+    {
+         std::cout << errno << std::strerror(errno) << std::endl;
+        return (-1);       
+    }
+    else
+        write(b, "i'have got your message", 24);
     close(_so);
+    close(b);
 }
