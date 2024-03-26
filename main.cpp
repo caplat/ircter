@@ -1,14 +1,12 @@
 #include <iostream>
 #include <sys/socket.h> /* Tout ce qui est lie aux socket*/
 #include <netinet/in.h> /* sockaddr_in*/
-#include <cstdlib>
 #include <sys/types.h> /* Utilise certaines macros */
 #include <netdb.h> /* gethostbyname*/
 #include <errno.h>
 #include <cstring> /*std::strerror*/
-#include <unistd.h> /* */
 #include <vector>
-#include <poll.h>
+#include "Pollfds.hpp"
 void set_addrinfo(addrinfo **h)
 {
     addrinfo _init;
@@ -28,13 +26,6 @@ void set_addrinfo(addrinfo **h)
         std::cout << "Getaddrinfo is ok" << std::endl;
 }
 
-pollfd create_pullfd(int fd, short events)
-{
-    pollfd b;
-    b.fd = fd;
-    b.events = events;
-    return (b);
-}
 
 int main(int argc, char** argv)
 {
@@ -72,17 +63,20 @@ int main(int argc, char** argv)
     else
         std::cout << "New connection" << std::endl;
 
+    short int _events[] = {POLLIN};
+    Poll_fds _fds(&_sock, 1, _events);
+    std::cout << _fds << std::endl;
 
-    std::vector<pollfd> _poll_fds;
-
-     _poll_fds.push_back(create_pullfd(_sock, POLLIN));
+    _fds.new_fds(_client_fd, POLLIN);
+    std::cout << _fds << std::endl;
 
     std::string  _buffer;
     char _buff_read[100];
     std::string _content;
     long _bytes_r = 0;
-    do
+    while (1)
     {
+        int status = poll(_fds.getpoll_fds(), _fds.getsize_fds(), 2000);
         _bytes_r = recv(_client_fd, _buff_read, 100, 0);
         _buff_read[_bytes_r] = 0;
         if (_bytes_r > 0)
@@ -92,7 +86,6 @@ int main(int argc, char** argv)
             std::cout << _content << std::endl;
         }
     }
-    while (_bytes_r > 0);
     _buffer = "HELLO WORD !";
     size_t _bytes = 0;
     size_t _size_buffer = _buffer.size();
