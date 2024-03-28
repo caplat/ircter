@@ -50,40 +50,46 @@ int main(int argc, char** argv)
     }
     listen(_sock, 20);
 
-    sockaddr _addr_cli;
-    int _client_fd;
-    socklen_t _size_cli = sizeof(_addr_cli);
-
-    _client_fd = accept(_sock, &_addr_cli, &_size_cli);
-    if (_client_fd == -1)
-    {
-        std::cout << errno << std::strerror(errno) << std::endl;
-        return (-1);
-    }
-    else
-        std::cout << "New connection" << std::endl;
-
     short int _events[] = {POLLIN};
     Poll_fds _fds(&_sock, 1, _events);
-    std::cout << _fds << std::endl;
-
-    _fds.new_fds(_client_fd, POLLIN);
     std::cout << _fds << std::endl;
 
     std::string  _buffer;
     char _buff_read[100];
     std::string _content;
     long _bytes_r = 0;
+    int _client_fd;
     while (1)
     {
-        int status = poll(_fds.getpoll_fds(), _fds.getsize_fds(), 2000);
-        _bytes_r = recv(_client_fd, _buff_read, 100, 0);
-        _buff_read[_bytes_r] = 0;
-        if (_bytes_r > 0)
+        int status = poll((pollfd*)_fds.getpoll_fds().data(), _fds.getsize_fds(), 2000);
+        if(status  == 0 || status == -1)
         {
-            _content.append(_buff_read);
-            bzero(_buff_read, 100);
-            std::cout << _content << std::endl;
+            std::cout << "Server waitting..." << "status : " << status << std::endl;
+            continue ;
+        }
+        else if(_fds.fdpollin_fds() != -1)
+        {
+             if (_fds.fdpollin_fds() == _sock)
+             {
+                sockaddr _addr_cli;
+                socklen_t _size_cli = sizeof(_addr_cli);
+                _client_fd = accept(_sock, &_addr_cli, &_size_cli);
+                _fds.new_fds(_client_fd, POLLIN);
+                std::cout << _fds << std::endl;
+
+             }
+             else
+             {
+                _bytes_r = recv(_client_fd, _buff_read, 100, 0);
+                _buff_read[_bytes_r] = 0;
+             
+                if (_bytes_r > 0)
+                {
+                    _content.append(_buff_read);
+                    bzero(_buff_read, 100);
+                    std::cout << _content << std::endl;
+                }
+             }
         }
     }
     _buffer = "HELLO WORD !";
@@ -94,6 +100,7 @@ int main(int argc, char** argv)
         _bytes += send(_client_fd, &(_buffer[_bytes]), _size_buffer, 0);
     }
     std::cout << _bytes << std::endl;
+    while (1);
     close(_sock);
     close(_client_fd);
 }

@@ -7,18 +7,10 @@
 #include <iostream>
 #include <vector>
 
-typedef struct _p
-{
-    int fd;
-    short int events;
-    short int revents;
-} pollfd;
-
 class Poll_fds
 {
-    pollfd * _poll_fds;
-    int _size_fds;
-    std::vector<pullfd> _pullin;
+    std::vector<pollfd> _pollin;
+    std::vector<pollfd> *_fds;
     public:
         Poll_fds(int*, int, short int*);
         ~Poll_fds();
@@ -27,11 +19,10 @@ class Poll_fds
         void new_fds(int, short);
         short int getevents(int);
         short int getrevents(int);
-        int fdpollin_fds(int);
-        int getsize_fds();
+        int fdpollin_fds();
+        size_t getsize_fds();
         int getfd_fds(int);
-        pollfd* getpoll_fds();
-        void clear_fds();
+        std::vector<pollfd> getpoll_fds();
 };
 
 
