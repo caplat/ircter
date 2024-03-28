@@ -86,8 +86,7 @@ int Poll_fds::fdpollin_fds()
             continue;
         else
         {
-            _pollin.push_back((*_fds)[i]);
-            _fds[i].revents = 0;
+            _pollin.push_back(_fds[i]);
             return(_fds[i].fd);
         }
     }
@@ -95,11 +94,24 @@ int Poll_fds::fdpollin_fds()
     
 }
 
+pollfd* Poll_fds::buildpoll()
+{
+    pollfd* _r = new pollfd[_fds.size()];
+    for (size_t i = 0; i < _fds.size(); i++)
+    {
+        _r[i] = _fds[i];
+    }
+    return (_r);
+    
+}
+
 std::ostream& operator<<(std::ostream & f, Poll_fds & src)
 {
     for (size_t i = 0; i < src.getsize_fds(); i++)
     {
-        f << "vector[" << i << "] : " << src.getpoll_fds()[i].fd << std::endl;
+        f << "vector[" << i << "] fd : " << src.getpoll_fds()[i].fd
+        << "\tevent : " << src.getpoll_fds()[i].events
+        << "\trevent : " << src.getpoll_fds()[i].revents << std::endl;
     }
     
    return (f);

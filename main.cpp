@@ -61,7 +61,9 @@ int main(int argc, char** argv)
     int _client_fd;
     while (1)
     {
-        int status = poll((pollfd*)_fds.getpoll_fds().data(), _fds.getsize_fds(), 2000);
+        pollfd* _tmp = _fds.buildpoll();
+        std::cout << _tmp[0].fd << std::endl;
+        int status = poll(_tmp, _fds.getsize_fds(), 2000);
         if(status  == 0 || status == -1)
         {
             std::cout << "Server waitting..." << "status : " << status << std::endl;
@@ -69,6 +71,7 @@ int main(int argc, char** argv)
         }
         else if(_fds.fdpollin_fds() != -1)
         {
+            std::cout <<"here" << std::endl;
              if (_fds.fdpollin_fds() == _sock)
              {
                 sockaddr _addr_cli;
