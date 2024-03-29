@@ -1,6 +1,6 @@
 #include "Pollfds.hpp"
 
-Poll_fds::Poll_fds(int* fds, int size_fds, short int* events)
+Poll_fds::Poll_fds(int* fds, int size_fds, short int* events) : _poll(0), _size_poll(0)
 {
     pollfd _a;
     for (int i = 0; i < size_fds; i++)
@@ -73,35 +73,39 @@ int Poll_fds::getfd_fds(int fd)
     
 }
 
-std::vector<pollfd> Poll_fds::getpoll_fds()
+std::vector<pollfd> Poll_fds::getvector_fds()
 {
     return(_fds);
 }
 
 int Poll_fds::fdpollin_fds()
 {
-    for (size_t i = 0; i < _fds.size(); i++)
+    for (size_t i = 0; i < _size_poll; i++)
     {
-        if (_fds[i].revents != POLLIN)
-            continue;
-        else
+        if (_poll[i].revents == POLLIN)
         {
-            _pollin.push_back(_fds[i]);
-            return(_fds[i].fd);
+            _pollin.push_back(_poll[i]);
+            return(_poll[i].fd);
         }
     }
     return (-1);
     
 }
 
-pollfd* Poll_fds::buildpoll()
+pollfd* Poll_fds::getpollfd_fds()
 {
-    pollfd* _r = new pollfd[_fds.size()];
+
+    if (_fds.size() != _size_poll)
+        delete _poll;
+    else
+        return _poll;
+    _poll = new pollfd[_fds.size()];
     for (size_t i = 0; i < _fds.size(); i++)
     {
-        _r[i] = _fds[i];
+        _poll[i] = _fds[i];
     }
-    return (_r);
+    _size_poll = _fds.size();
+    return (_poll);
     
 }
 
@@ -109,9 +113,9 @@ std::ostream& operator<<(std::ostream & f, Poll_fds & src)
 {
     for (size_t i = 0; i < src.getsize_fds(); i++)
     {
-        f << "vector[" << i << "] fd : " << src.getpoll_fds()[i].fd
-        << "\tevent : " << src.getpoll_fds()[i].events
-        << "\trevent : " << src.getpoll_fds()[i].revents << std::endl;
+        f << "vector[" << i << "] fd : " << src.getvector_fds()[i].fd
+        << "\tevent : " << src.getvector_fds()[i].events
+        << "\trevent : " << src.getvector_fds()[i].revents << std::endl;
     }
     
    return (f);

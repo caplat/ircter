@@ -12,6 +12,7 @@ class Poll_fds
     std::vector<pollfd> _pollin;
     std::vector<pollfd> _fds;
     pollfd* _poll;
+    size_t _size_poll;
     public:
         Poll_fds(int*, int, short int*);
         ~Poll_fds();
@@ -23,8 +24,8 @@ class Poll_fds
         int fdpollin_fds();
         size_t getsize_fds();
         int getfd_fds(int);
-        pollfd* buildpoll();
-        std::vector<pollfd> getpoll_fds();
+        pollfd* getpollfd_fds();
+        std::vector<pollfd> getvector_fds();
 };
 
 
