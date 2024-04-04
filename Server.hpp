@@ -13,40 +13,45 @@ class User
         std::string _name;
         int _so;
         std::list<std::string> _chan;
+        pollfd _fd;
     public:
-        User(int fd) : _so(fd){}
+        User(int fd) : _so(fd){
+            _fd.fd = fd;
+            _fd.events = POLLIN;
+        }
         ~User(){}
         int getsock(){return (_so);}
-    friend std::ostream& operator<<(std::ostream & f, std::map<std::string, User> &s)
-{
-    for (std::map<std::string, User>::iterator it = s.begin();   it != s.end(); it++)
-    {
-        f << it->first << std::endl; 
-    }
-    return (f);
-}
+        pollfd& getpollfd(){return (_fd);}
 
 };
 
+typedef  std::map<int, User>::iterator _ituser;
 class Server
 {
     private:
     addrinfo *_host;
     int _sock_serv;
-    Poll_fds _fds;
-    std::map<std::string, User> _users;
+    std::map<int, User> _users;
+    pollfd* _poll;
+    size_t _size_poll;
 
     public:
     Server();
     ~Server();
     void set_host();
-    void make_sockserv();
-    int getsock_serv();
     addrinfo& getaddrinfo_serv();
-    Poll_fds& getpollfd_serv();
+
+    int getsock_serv();
+    int getRevents();
+    std::map<int, User> getUsers();
+
+    void makepollfd_fds();
+    void make_sockserv();
+
     void run_serv();
-    void accept_conection_serv();
     void readfds_serv(int);
+    void accept_conection_serv();
 };
+std::ostream& operator<<(std::ostream&, Server&); 
 
 #endif

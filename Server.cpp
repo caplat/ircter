@@ -2,6 +2,8 @@
 
 Server::Server()
 {
+    _poll = NULL;
+    _size_poll = 0;
     set_host();
     make_sockserv();
 }
@@ -9,6 +11,7 @@ Server::Server()
 Server::~Server()
 {
     freeaddrinfo(_host);
+    delete _poll;
     close(_sock_serv);
 }
 
@@ -39,7 +42,9 @@ void Server::make_sockserv()
         std::cout << errno << std::strerror(errno) << std::endl;
         throw -2;
     }
-    _fds.new_fds(_sock_serv, POLLIN);
+    User _serv(_sock_serv);
+    _users.insert(std::make_pair(_sock_serv, _serv));
+    makepollfd_fds();
 }
 
 int Server::getsock_serv()
@@ -52,11 +57,6 @@ addrinfo& Server::getaddrinfo_serv()
     return (*_host);
 }
 
-Poll_fds& Server::getpollfd_serv()
-{
-    return (_fds);
-}
-
 void Server::accept_conection_serv()
 {
     int _fdcli;
@@ -65,11 +65,9 @@ void Server::accept_conection_serv()
     _fdcli = accept(_sock_serv, &_addr_cli, &_size_cli);
 
     User _new(_fdcli);
-    std::string _str = "name";
-    _users.insert(std::make_pair(_str, _new));
-    std::cout << _users << std::endl;
-    _fds.new_fds(_fdcli, POLLIN);
-    std::cout << _fds << std::endl;
+    _users.insert(std::make_pair(_fdcli, _new));
+    std::cout << this << std::endl;
+    makepollfd_fds();
 }
 
 void Server::readfds_serv(int fd)
@@ -98,15 +96,15 @@ void Server::run_serv()
     listen(_sock_serv, 20);
     while (1)
     {
-        int status = poll(_fds.getpollfd_fds(), _fds.getsize_fds(), 2000);
+        int status = poll(_poll, _size_poll, 2000);
         if(status  == 0 || status == -1)
         {
             std::cout << "Server waitting..." << "status : " << status << std::endl;
             continue ;
         }
-        else if(_fds.fdpollin_fds() != -1)
+        else if(getRevents() != -1)
         {
-            int _fd = _fds.fdpollin_fds();
+            int _fd = getRevents();
              if (_fd == _sock_serv)
              {
                 accept_conection_serv();
@@ -115,4 +113,47 @@ void Server::run_serv()
                 readfds_serv(_fd);
         }
     }
+}
+
+int Server::getRevents()
+{
+    for (size_t i = 0; i < _size_poll; i++)
+    {
+        if(_poll[i].revents == POLLIN)
+            return (_poll[i].fd);
+    }
+    
+    return (-1);
+}
+
+std::map<int, User> Server::getUsers()
+{
+    return (_users);
+}
+
+
+void Server::makepollfd_fds()
+{
+    int i = 0;
+    _poll = new pollfd[_users.size()];
+    for(_ituser it = _users.begin(); it != _users.end(); it++)
+    {
+        _poll[i]= it->second.getpollfd();
+        i++;
+    }
+    _size_poll = i;
+    
+}
+
+
+
+//User
+std::ostream& operator<<(std::ostream & f, Server &s) 
+{
+    std::map<int, User> _us = s.getUsers();
+      for (_ituser it = _us.begin();   it != _us.end(); it++)
+      {
+          f << (it->second.getsock()) << std::endl; 
+      }
+      return (f);
 }
