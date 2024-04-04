@@ -15,6 +15,7 @@ class Poll_fds
     size_t _size_poll;
     public:
         Poll_fds(int*, int, short int*);
+        Poll_fds();
         ~Poll_fds();
         Poll_fds(const Poll_fds &);
         Poll_fds & operator=(const Poll_fds &);

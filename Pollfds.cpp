@@ -12,6 +12,9 @@ Poll_fds::Poll_fds(int* fds, int size_fds, short int* events) : _poll(0), _size_
     
 }
 
+Poll_fds::Poll_fds() : _poll(0), _size_poll(0)
+{}
+
 Poll_fds::~Poll_fds()
 {
 }
@@ -94,10 +97,9 @@ int Poll_fds::fdpollin_fds()
 
 pollfd* Poll_fds::getpollfd_fds()
 {
-
-    if (_fds.size() != _size_poll)
+    if (_fds.size() != _size_poll && _size_poll > 0)
         delete _poll;
-    else
+    else if( _size_poll > 0)
         return _poll;
     _poll = new pollfd[_fds.size()];
     for (size_t i = 0; i < _fds.size(); i++)
