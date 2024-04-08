@@ -66,8 +66,9 @@ void Server::accept_conection_serv()
 
     User _new(_fdcli);
     _users.insert(std::make_pair(_fdcli, _new));
-    std::cout << this << std::endl;
+    std::cout << *this << std::endl;
     makepollfd_fds();
+    readfds_serv(_fdcli);
 }
 
 void Server::readfds_serv(int fd)
@@ -75,14 +76,17 @@ void Server::readfds_serv(int fd)
     std::string  _buffer;
     char _buff_read[100];
     std::string _content;
-    long _bytes_r = 0;
-    _bytes_r = recv(fd, _buff_read, 100, 0);
-    _buff_read[_bytes_r] = 0;
-    if (_bytes_r > 0)
+    long _bytes_r = 1;
+    while (_bytes_r > 0)
     {
-        _content.append(_buff_read);
-        bzero(_buff_read, 100);
-        std::cout << _content << std::endl;
+        _bytes_r = recv(fd, _buff_read, 20, 0);
+        _buff_read[_bytes_r] = 0;
+        if (_bytes_r > 0)
+        {
+            _content.append(_buff_read);
+            bzero(_buff_read, 100);
+            std::cout << _content << std::endl;
+        }
     }
 }
 
@@ -126,7 +130,7 @@ int Server::getRevents()
     return (-1);
 }
 
-std::map<int, User> Server::getUsers()
+std::map<int, User>& Server::getUsers()
 {
     return (_users);
 }
