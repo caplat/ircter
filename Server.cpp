@@ -68,7 +68,6 @@ void Server::accept_conection_serv()
     _users.insert(std::make_pair(_fdcli, _new));
     std::cout << *this << std::endl;
     makepollfd_fds();
-    readfds_serv(_fdcli);
 }
 
 void Server::readfds_serv(int fd)
@@ -77,16 +76,19 @@ void Server::readfds_serv(int fd)
     char _buff_read[100];
     std::string _content;
     long _bytes_r = 1;
-    while (_bytes_r > 0)
+    _bytes_r = recv(fd, _buff_read, 100, 0);
+    if (_bytes_r == 0)
     {
-        _bytes_r = recv(fd, _buff_read, 20, 0);
-        _buff_read[_bytes_r] = 0;
-        if (_bytes_r > 0)
-        {
-            _content.append(_buff_read);
-            bzero(_buff_read, 100);
-            std::cout << _content << std::endl;
-        }
+        _users.erase(fd);
+        close(fd);
+        makepollfd_fds();
+    }
+    _buff_read[_bytes_r] = 0;
+    if (_bytes_r > 0)
+    {
+        _content.append(_buff_read);
+        bzero(_buff_read, 100);
+        std::cout << _content << std::endl;
     }
 }
 
@@ -100,13 +102,14 @@ void Server::run_serv()
     listen(_sock_serv, 20);
     while (1)
     {
-        int status = poll(_poll, _size_poll, 2000);
+        int status = poll(_poll, _size_poll, 5000);
         if(status  == 0 || status == -1)
         {
+            std::cout << _poll[0].revents << std::endl;
             std::cout << "Server waitting..." << "status : " << status << std::endl;
             continue ;
         }
-        else if(getRevents() != -1)
+        else if (getRevents() > 0)
         {
             int _fd = getRevents();
              if (_fd == _sock_serv)
@@ -114,7 +117,10 @@ void Server::run_serv()
                 accept_conection_serv();
              }
              else
+             {
+                std::cout << _poll[1].revents << std::endl;
                 readfds_serv(_fd);
+             }
         }
     }
 }
@@ -124,7 +130,9 @@ int Server::getRevents()
     for (size_t i = 0; i < _size_poll; i++)
     {
         if(_poll[i].revents == POLLIN)
+        {
             return (_poll[i].fd);
+        }
     }
     
     return (-1);
@@ -147,6 +155,19 @@ void Server::makepollfd_fds()
     }
     _size_poll = i;
     
+}
+
+User* Server::findUser(int fd)
+{
+    for (_ituser i = _users.begin(); i != _users.end(); i++)
+    {
+        if (i->first == fd)
+        {
+            return (&(i->second));
+        }
+    }
+    std::cout << "User not Found\n";
+    throw ;
 }
 
 

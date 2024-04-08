@@ -28,6 +28,7 @@ class Server
     int getsock_serv();
     int getRevents();
     std::map<int, User>& getUsers();
+    User* findUser(int);
 
     void makepollfd_fds();
     void make_sockserv();
