@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <netdb.h> /* gethostbyname*/
 #include <utility>
-
+#define _BUFF_SIZE 20
 typedef  std::map<int, User>::iterator _ituser;
 class Server
 {

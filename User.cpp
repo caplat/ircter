@@ -23,7 +23,7 @@ char* User::getbuff()
     return (_buff);
 }
 
-std::string User::getstr()
+std::string& User::getstr()
 {
     return (_str);
 }

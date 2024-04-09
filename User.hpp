@@ -11,7 +11,7 @@ class User
     private:
         //std::string _name;
         int _so;
-        //std::list<std::string> _chan;
+        std::list<std::string> _chan;
         char _buff[100];
         std::string _str;
         pollfd _fd;
@@ -21,7 +21,7 @@ class User
         ~User();
         int getsock();
         char* getbuff();
-    std::string getstr();
+        std::string& getstr();
         int getregis();
         pollfd& getpollfd();
 

@@ -73,10 +73,11 @@ void Server::accept_conection_serv()
 void Server::readfds_serv(int fd)
 {
     std::string  _buffer;
-    char _buff_read[100];
+    char _buff_read[_BUFF_SIZE];
+    User* _us = findUser(fd);
     std::string _content;
     long _bytes_r = 1;
-    _bytes_r = recv(fd, _buff_read, 100, 0);
+    _bytes_r = recv(fd, _buff_read, _BUFF_SIZE, 0);
     if (_bytes_r == 0)
     {
         _users.erase(fd);
@@ -87,8 +88,14 @@ void Server::readfds_serv(int fd)
     if (_bytes_r > 0)
     {
         _content.append(_buff_read);
-        bzero(_buff_read, 100);
-        std::cout << _content << std::endl;
+        _us->setstr(_buff_read);
+        bzero(_buff_read, _BUFF_SIZE);
+        if (_bytes_r < _BUFF_SIZE)
+        {
+            std::cout << _us->getstr() << std::endl;
+            _us->getstr().clear();
+            std::cout << _us->getstr() << std::endl;
+        }
     }
 }
 
@@ -105,7 +112,10 @@ void Server::run_serv()
         int status = poll(_poll, _size_poll, 5000);
         if(status  == 0 || status == -1)
         {
-            std::cout << _poll[0].revents << std::endl;
+            for (size_t i = 0; i < _size_poll; i++)
+            {
+                std::cout << _poll[i].revents << std::endl;
+            }
             std::cout << "Server waitting..." << "status : " << status << std::endl;
             continue ;
         }
@@ -118,7 +128,11 @@ void Server::run_serv()
              }
              else
              {
-                std::cout << _poll[1].revents << std::endl;
+                std::cout << "Read\n";
+                for (size_t i = 0; i < _size_poll; i++)
+                {
+                    std::cout << _poll[i].revents << std::endl;
+                }
                 readfds_serv(_fd);
              }
         }
