@@ -6,26 +6,29 @@
 #include <cstring>
 #include <map>
 
+
+
 class User
 {
     private:
-        //std::string _name;
+        std::string _name, _pass, _userMode;
         int _so;
         std::list<std::string> _chan;
-        char _buff[100];
         std::string _str;
         pollfd _fd;
         int _regis;
+        int CAPLS;
     public:
         User(int);
         ~User();
         int getsock();
-        char* getbuff();
         std::string& getstr();
         int getregis();
         pollfd& getpollfd();
 
         void setstr(char*);
+
+        void registration();
 
 };
 

@@ -91,11 +91,13 @@ void Server::readfds_serv(int fd)
         _us->setstr(_buff_read);
         bzero(_buff_read, _BUFF_SIZE);
         if (_bytes_r < _BUFF_SIZE)
-        {
             std::cout << _us->getstr() << std::endl;
-            _us->getstr().clear();
-            std::cout << _us->getstr() << std::endl;
-        }
+        
+    }
+    if (!_us->getregis())
+    {
+        std::cout << "Registration\n";
+        _us->registration();
     }
 }
 
