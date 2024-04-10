@@ -17,7 +17,6 @@ class User
         std::string _str;
         pollfd _fd;
         int _regis;
-        int CAPLS;
     public:
         User(int);
         ~User();

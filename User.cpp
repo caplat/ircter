@@ -1,6 +1,6 @@
 #include "User.hpp"
 
-User::User(int fd) : _so(fd), _regis(0), CAPLS(0){
+User::User(int fd) : _so(fd), _regis(0){
     _fd.fd = fd;
     _fd.events = POLLIN;
 }
@@ -36,22 +36,24 @@ void User::setstr(char * str)
 
 void User::registration()
 {
-    if(!CAPLS && _str.find("CAP LS") != std::string::npos)
+    size_t _end;
+
+    do
     {
-        std::cout << "CAP LS :" << std::endl;
-        CAPLS = 1;
-        _str.erase(_str.begin());
-    }
-    else if (CAPLS && _name.empty())
-    {
-        std::cout << "setup nickname, user, realname\n";
-        _name = "userTest";
-        _str.erase(_str.begin());
-    }
-    else if (CAPLS && _str.find("CAP END") && !_name.empty())
-    {
-        std::cout << "The registration is finished\n"; 
-        _regis = 1;
-    }
-    
+        _end = _str.find("\r\n");
+        std::cout << "index of \\r\\n : " << _end << std::endl;
+        if (_str.compare(0, 4,"NICK") != std::string::npos)
+        {
+            std::cout << "setup nickname, user, realname\n";
+            _name = "userTest";
+            _str.clear();
+        }
+        else if (_str.compare(0, 4, "USER") != std::string::npos)
+        {
+            std::cout << "The registration is finished\n"; 
+            _regis = 1;
+        }
+		else
+			_str.erase(0, _end);
+    } while (_end != std::string::npos);
 }

@@ -90,7 +90,7 @@ void Server::readfds_serv(int fd)
         _content.append(_buff_read);
         _us->setstr(_buff_read);
         bzero(_buff_read, _BUFF_SIZE);
-        if (_bytes_r < _BUFF_SIZE)
+        if (_us->getstr().find("\r\n") != std::string::npos)
             std::cout << _us->getstr() << std::endl;
         
     }
@@ -111,7 +111,7 @@ void Server::run_serv()
     listen(_sock_serv, 20);
     while (1)
     {
-        int status = poll(_poll, _size_poll, 5000);
+        int status = poll(_poll, _size_poll, 2000);
         if(status  == 0 || status == -1)
         {
             for (size_t i = 0; i < _size_poll; i++)
