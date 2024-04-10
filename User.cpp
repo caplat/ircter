@@ -38,22 +38,21 @@ void User::registration()
 {
     size_t _end;
 
-    do
     {
         _end = _str.find("\r\n");
         std::cout << "index of \\r\\n : " << _end << std::endl;
-        if (_str.compare(0, 4,"NICK") != std::string::npos)
+        std::cout << _str << std::endl;
+        if (_str.compare(0, 4,"NICK") == 0 && _end != std::string::npos)
         {
             std::cout << "setup nickname, user, realname\n";
             _name = "userTest";
-            _str.clear();
         }
-        else if (_str.compare(0, 4, "USER") != std::string::npos)
+        else if (_str.compare(0, 4, "USER") == 0 && _end != std::string::npos)
         {
             std::cout << "The registration is finished\n"; 
             _regis = 1;
         }
-		else
-			_str.erase(0, _end);
-    } while (_end != std::string::npos);
+		if (_end != std::string::npos)
+			_str.erase(0, _end + 2);
+    } 
 }
