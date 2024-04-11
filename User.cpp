@@ -1,6 +1,6 @@
 #include "User.hpp"
 
-User::User(int fd) : _so(fd), _regis(0){
+User::User(int fd, Server &_serv) : _so(fd), _regis(0), _server(&_serv){
     _fd.fd = fd;
     _fd.events = POLLIN;
 }
@@ -26,6 +26,11 @@ std::string& User::getstr()
 pollfd& User::getpollfd()
 {
     return (_fd);
+}
+
+Server* User::getServer()
+{
+    return (_server);
 }
 
 

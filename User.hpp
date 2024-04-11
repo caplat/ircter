@@ -5,8 +5,9 @@
 #include <list>
 #include <cstring>
 #include <map>
+#include "Server.hpp"
 
-
+class Server;
 
 class User
 {
@@ -17,12 +18,14 @@ class User
         std::string _str;
         pollfd _fd;
         int _regis;
+        Server * _server;
     public:
-        User(int);
+        User(int, Server &);
         ~User();
         int getsock();
         std::string& getstr();
         int getregis();
+        Server* getServer();
         pollfd& getpollfd();
 
         void setstr(char*);

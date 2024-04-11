@@ -9,11 +9,15 @@
 #include <netdb.h> /* gethostbyname*/
 #include <utility>
 #define _BUFF_SIZE 20
+
+class User;
+
 typedef  std::map<int, User>::iterator _ituser;
 class Server
 {
     private:
     addrinfo *_host;
+    char _hostname[256];
     int _sock_serv;
     std::map<int, User> _users;
     pollfd* _poll;
@@ -27,6 +31,7 @@ class Server
 
     int getsock_serv();
     int getRevents();
+    std::string gethostname_srv();
     std::map<int, User>& getUsers();
     User* findUser(int);
 

@@ -22,7 +22,6 @@ void Server::set_host()
     _init.ai_family = AF_INET;
     _init.ai_flags = AI_PASSIVE;
     _init.ai_socktype = SOCK_STREAM;
-
     int _test = getaddrinfo(0, "4263", &_init, &_host);
     std::cout << _test << std::endl;
     if (_test != 0)
@@ -32,6 +31,8 @@ void Server::set_host()
     }
     else
         std::cout << "Getaddrinfo is ok" << std::endl;
+    gethostname(_hostname, sizeof(_hostname));
+    std::cout << (std::string)_hostname << std::endl;
 }
 
 void Server::make_sockserv()
@@ -42,7 +43,7 @@ void Server::make_sockserv()
         std::cout << errno << std::strerror(errno) << std::endl;
         throw -2;
     }
-    User _serv(_sock_serv);
+    User _serv(_sock_serv, *this);
     _users.insert(std::make_pair(_sock_serv, _serv));
     makepollfd_fds();
 }
@@ -63,8 +64,7 @@ void Server::accept_conection_serv()
     sockaddr _addr_cli;
     socklen_t _size_cli = sizeof(_addr_cli);
     _fdcli = accept(_sock_serv, &_addr_cli, &_size_cli);
-
-    User _new(_fdcli);
+    User _new(_fdcli, *this);
     _users.insert(std::make_pair(_fdcli, _new));
     std::cout << *this << std::endl;
     makepollfd_fds();
@@ -98,6 +98,10 @@ void Server::readfds_serv(int fd)
     {
         std::cout << "Registration\n";
         _us->registration();
+    }
+    else
+    {
+        
     }
 }
 
@@ -157,6 +161,11 @@ int Server::getRevents()
 std::map<int, User>& Server::getUsers()
 {
     return (_users);
+}
+
+std::string Server::gethostname_srv()
+{
+    return ((std::string)_hostname);
 }
 
 
