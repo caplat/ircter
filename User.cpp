@@ -55,6 +55,10 @@ void User::registration()
         else if (_str.compare(0, 4, "USER") == 0 && _end != std::string::npos)
         {
             std::cout << "The registration is finished\n"; 
+            _server->sendfds_serv(_so, RPL_001(_server, _name));
+            _server->sendfds_serv(_so, RPL_002(_server));
+            _server->sendfds_serv(_so, RPL_003(_server));
+            _server->sendfds_serv(_so, RPL_004(_server));
             _regis = 1;
         }
 		if (_end != std::string::npos)

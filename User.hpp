@@ -6,6 +6,7 @@
 #include <cstring>
 #include <map>
 #include "Server.hpp"
+#include "Rply.hpp"
 
 class Server;
 

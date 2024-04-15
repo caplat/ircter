@@ -22,7 +22,7 @@ void Server::set_host()
     _init.ai_family = AF_INET;
     _init.ai_flags = AI_PASSIVE;
     _init.ai_socktype = SOCK_STREAM;
-    int _test = getaddrinfo(0, "4263", &_init, &_host);
+    int _test = getaddrinfo(0, "4264", &_init, &_host);
     std::cout << _test << std::endl;
     if (_test != 0)
     {
@@ -99,9 +99,13 @@ void Server::readfds_serv(int fd)
         std::cout << "Registration\n";
         _us->registration();
     }
-    else
+}
+
+void Server::sendfds_serv(int fd, std::string str)
+{
+    if(str.size() < 512)
     {
-        
+        send(fd, str.c_str(), str.size(), 0);
     }
 }
 
