@@ -6,18 +6,18 @@
 
 int main(int argc, char** argv)
 {
-    (void) argc;
-    (void) argv;
-    
-    try
-    {
-        Server _s; 
-        _s.run_serv();
-    }
-    catch(int e)
-    {
-        std::cerr << e << '\n';
-    }
+	(void) argc;
+	(void) argv;
+	
+	try
+	{
+		Server _s; 
+		_s.run_serv();
+	}
+	catch(int e)
+	{
+		std::cerr << e << '\n';
+	}
 
 
 }
