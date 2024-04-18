@@ -47,8 +47,6 @@ void User::registration()
         try
 		{
        		_end = _str.find("\r\n");
-       		std::cout << "index of \\r\\n : " << _end << std::endl;
-       		std::cout << _str << std::endl;
        		if (_end == std::string::npos)
        		    throw(-1);
 			cmds();
@@ -71,7 +69,6 @@ int User::find_cmds()
 {
 	const char* tab[] = {"NICK", "USER"};
 	std::list<std::string> _cmds(tab, tab + sizeof(tab) / sizeof(char*) );
-
 	std::list<std::string>::iterator _it;
 	int i = 0;
 	for (_it = _cmds.begin(); _it != _cmds.end(); _it++)
@@ -122,14 +119,15 @@ void User::setup_nick()
 {
     size_t _index = _str.find(" ");
     size_t _len = 0;
-	if (_index == _str.size() -2 || _index == std::string::npos)
+	std::string _valid = "\\[]{}";
+	if (_index == _str.size() -3 || _index == std::string::npos || isdigit(_str[_index + 1]))
 	{
 		std::cout << "you forgot the parameter" << std::endl;
 		return ;
 	}
     while (++_index < _str.size() - 2)
     {
-        if(!isalpha(_str[_index]))
+        if(!isalnum(_str[_index]) && std::find(_valid.begin(), _valid.end(), _str[_index]) == _valid.end())
         {
             std::cout << "Error nickname\n";
             return ;
@@ -146,28 +144,29 @@ void User::setup_nick()
 
 void User::setup_user()
 {
-	size_t _index = _str.find(" ");
-	std::cout << "first space : " <<_index << std::endl;
- 	_index = _str.find(" ", _index + 1);
-	std::cout << "second space : " <<_index << std::endl;
     size_t _usern = 0;
     size_t _rn = 0;
-	if (_index == _str.size() -2)
+	size_t _index = _str.find(" ");
+	if (_index == _str.size() -2 || _index == std::string::npos)
 	{
 		std::cout << "you forgot the parameter" << std::endl;
 		return ;
 	}
+	std::cout << "first space : " <<_index << std::endl;
 	while(isalpha(_str[++_index]))
         _usern++;
-	std::cout << "test1\n";
-	if(_str[++_index] != '0')
+ 	_index = _str.find(" ", _index);
+	std::cout << "second space : " <<_index << std::endl;
+	if (_str[++_index] != '0')
 		return ;
-	std::cout << "test2\n";
-	if(_str[++_index] != '*')
+	_index = _str.find(" ", _index);
+	std::cout << "third space : " <<_index << std::endl;
+	if (_str[++_index] != '*')
 		return ;
-	std::cout << "test3\n";
-	while(isalpha(_str[++_index]))
-		_rn++;
+	_index = _str.find(" ", _index);
+	std::cout << "fourth space : " <<_index << std::endl;
+	while(isalpha(_str[++_index]) || isspace(_str[_index]))
+        _rn++;
 	if(_usern > 0 && _rn > 0)
 	{
 		std::cout << "Setup username \t realname\n";
