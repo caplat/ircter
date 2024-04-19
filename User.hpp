@@ -8,6 +8,7 @@
 #include "Server.hpp"
 #include "Rply.hpp"
 #include <algorithm>
+#include <cstdlib>
 
 class Server;
 

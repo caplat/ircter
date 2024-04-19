@@ -12,6 +12,7 @@ int main(int argc, char** argv)
 	try
 	{
 		Server _s; 
+		std::cout << getlogin() << std::endl;
 		_s.run_serv();
 	}
 	catch(int e)
