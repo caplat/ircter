@@ -49,6 +49,7 @@ void User::registration()
        		_end = _str.find("\r\n");
        		if (_end == std::string::npos)
        		    throw(-1);
+			trim_cmds();
 			cmds();
         }
         catch (int test)
@@ -112,6 +113,20 @@ void User::cmds()
 	}
 	default:
 		break;
+	}
+}
+
+void User::trim_cmds()
+{
+	size_t _len = 0;
+	for (size_t i = 0; i < _str.size(); i++)
+	{
+		_len = 0;
+		while(isspace(_str[i++]))
+			_len++;
+		std::cout << "length : " << _len << std::endl;
+		if (_len > 1)
+			_str = _str.erase(i - _len, _len - 1);
 	}
 }
 

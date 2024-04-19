@@ -42,6 +42,7 @@ class User
         void setup_nick();
 		void setup_user();
 		void test();
+		void trim_cmds();
 		void cmds();
 		int find_cmds();
 
