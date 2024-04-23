@@ -40,7 +40,7 @@ class Server
 
 	void run_serv();
 	void readfds_serv(int);
-	void sendfds_serv(int, std::string);
+	void sendfds_serv(int, std::vector<std::string>);
 	void accept_conection_serv();
 };
 std::ostream& operator<<(std::ostream&, Server&); 

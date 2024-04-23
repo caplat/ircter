@@ -47,9 +47,10 @@ void User::registration()
         try
 		{
        		_end = _str.find("\r\n");
+			std::cout << "\\r\\n : " << _end << std::endl;
        		if (_end == std::string::npos)
        		    throw(-1);
-			trim_cmds();
+			trim_cmds(_end);
 			cmds();
         }
         catch (int test)
@@ -83,6 +84,17 @@ int User::find_cmds()
 
 void User::cmds()
 {	
+	std::string _rpl[8] = {
+		RPL_WELCOME(_server, _name), 
+		RPL_YOURHOST(_server, _name),
+		RPL_CREATED(_server, _name),
+		RPL_MYINFO(_server, _name),
+		RPL_ISUPPORT(_server, _name),
+		RPL_MOTD(_server, _name),
+		RPL_ENDOFMOTD(_server, _name),
+		RPL_UMODEIS(_server, _name, "i") //Beosin de la commande Mode pour mettre le +i sur IRC
+};
+	std::vector<std::string> _rpls(_rpl, _rpl + sizeof(_rpl) / sizeof(_rpl[0]));
 	switch (find_cmds())
 	{
 	case 0:
@@ -91,10 +103,7 @@ void User::cmds()
 			if (_regis)
 			{
 				std::cout << "The registration is finished\n"; 
-				_server->sendfds_serv(_so, RPL_001(_server, _name));
-				_server->sendfds_serv(_so, RPL_002(_server));
-				_server->sendfds_serv(_so, RPL_003(_server));
-				_server->sendfds_serv(_so, RPL_004(_server));
+				_server->sendfds_serv(_so, _rpls);	
 			}
 			break;
 	}
@@ -104,10 +113,7 @@ void User::cmds()
 			if (_regis)
 			{
 				std::cout << "The registration is finished\n"; 
-				_server->sendfds_serv(_so, RPL_001(_server, _name));
-				_server->sendfds_serv(_so, RPL_002(_server));
-				_server->sendfds_serv(_so, RPL_003(_server));
-				_server->sendfds_serv(_so, RPL_004(_server));
+				_server->sendfds_serv(_so, _rpls);
 			}
             break ;	
 	}
@@ -116,23 +122,25 @@ void User::cmds()
 	}
 }
 
-void User::trim_cmds()
+void User::trim_cmds(size_t _endcmds)
 {
 	size_t _len = 0;
-	for (size_t i = 0; i < _str.size(); i++)
+	bool double_point = 0;
+	for (size_t i = 0; i < _endcmds; i++)
 	{
 		_len = 0;
+		if (_str[i] == ':')
+			double_point = 1;
 		while(isspace(_str[i++]))
 			_len++;
-		std::cout << "length : " << _len << std::endl;
-		if (_len > 1)
+		if (_len > 1 && !double_point)
 			_str = _str.erase(i - _len, _len - 1);
 	}
 }
 
 void User::setup_nick()
 {
-    size_t _index = _str.find(" ");
+    size_t _index = _str.find(' ');
     size_t _len = 0;
 	std::string _valid = "\\[]{}";
 	if (_index == _str.size() -3 || _index == std::string::npos || isdigit(_str[_index + 1]))
@@ -140,9 +148,9 @@ void User::setup_nick()
 		std::cout << "you forgot the parameter" << std::endl;
 		return ;
 	}
-    while (++_index < _str.size() - 2)
+    while (++_index < _str.find("\r\n"))
     {
-        if(!isalnum(_str[_index]) && std::find(_valid.begin(), _valid.end(), _str[_index]) == _valid.end())
+        if(!isalnum(_str[_index]) && std::find(_valid.begin(), _valid.end(), _str[_index]) != _valid.end())
         {
             std::cout << "Error nickname\n";
             return ;
@@ -150,7 +158,8 @@ void User::setup_nick()
         _len++;
     }
 	std::cout << "Setup NICK\n";
-    _name.append(_str, _str.find(" ") + 1, _len);
+	std::cout << "len of nickname : " << _len << std::endl;
+    _name.append(_str, _str.find(' ') + 1, _len);
     if (!_name.empty() && !_username.empty())
         _regis = 1;
 
@@ -161,7 +170,7 @@ void User::setup_user()
 {
     size_t _usern = 0;
     size_t _rn = 0;
-	size_t _index = _str.find(" ");
+	size_t _index = _str.find(' ');
 	if (_index == _str.size() -2 || _index == std::string::npos)
 	{
 		std::cout << "you forgot the parameter" << std::endl;
@@ -170,23 +179,23 @@ void User::setup_user()
 	std::cout << "first space : " <<_index << std::endl;
 	while(isalpha(_str[++_index]))
         _usern++;
- 	_index = _str.find(" ", _index);
+ 	_index = _str.find(' ', _index);
 	std::cout << "second space : " <<_index << std::endl;
-	if (_str[++_index] != '0')
-		return ;
-	_index = _str.find(" ", _index);
+	_index = _str.find(' ', ++_index);
 	std::cout << "third space : " <<_index << std::endl;
-	if (_str[++_index] != '*')
-		return ;
-	_index = _str.find(" ", _index);
+	_index = _str.find(' ', ++_index);
 	std::cout << "fourth space : " <<_index << std::endl;
-	while(isalpha(_str[++_index]) || isspace(_str[_index]))
+	if (_str[++_index] != ':')
+		--_index;
+	while((isalpha(_str[++_index]) || isspace(_str[_index])) && _index < _str.size() -2)
         _rn++;
 	if(_usern > 0 && _rn > 0)
 	{
 		std::cout << "Setup username \t realname\n";
- 		_username.append(_str, _str.find(" ") + 1, _usern);
- 		_realname.append(_str, _str.find(" ") + 1, _usern);
+ 		_username.append(_str, _str.find(' ') + 1, _usern);
+ 		_realname.append(_str, _index - _rn, _rn);
+		std::cout << "Username : " << _username << std::endl;
+		std::cout << "Realname : " << _realname << std::endl;
 	}
 	if(!_name.empty() && !_username.empty())
 		_regis = 1;

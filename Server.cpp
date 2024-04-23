@@ -22,7 +22,7 @@ void Server::set_host()
 	_init.ai_family = AF_INET;
 	_init.ai_flags = AI_PASSIVE;
 	_init.ai_socktype = SOCK_STREAM;
-	int _test = getaddrinfo(0, "4263", &_init, &_host);
+	int _test = getaddrinfo(0, "4264", &_init, &_host);
 	std::cout << _test << std::endl;
 	if (_test != 0)
 	{
@@ -89,24 +89,27 @@ void Server::readfds_serv(int fd)
 	{
 		_content.append(_buff_read);
 		_us->setstr(_buff_read);
-		bzero(_buff_read, _BUFF_SIZE);
-		if (_us->getstr().find("\r\n") != std::string::npos)
-			std::cout << _us->getstr() << std::endl;
-		
+		bzero(_buff_read, _BUFF_SIZE);	
 	}
 	if (!_us->getregis())
 	{
 		std::cout << "Registration\n";
+		std::cout << _us->getstr() << std::endl;
 		_us->registration();
 	}
 }
 
-void Server::sendfds_serv(int fd, std::string str)
+void Server::sendfds_serv(int fd, std::vector<std::string> rpl)
 {
-	if(str.size() < 512)
+	for (size_t i = 0; i < rpl.size(); i++)
 	{
-		send(fd, str.c_str(), str.size(), 0);
+		if(rpl[i].size() < 512)
+		{
+			send(fd, rpl[i].c_str(), rpl[i].size(), 0);
+		}
 	}
+	
+
 }
 
 void Server::run_serv()
