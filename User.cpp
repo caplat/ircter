@@ -51,7 +51,7 @@ void User::registration()
        		if (_end == std::string::npos)
        		    throw(-1);
 			trim_cmds(_end);
-			cmds();
+			cmds_register();
         }
         catch (int test)
         {
@@ -69,7 +69,7 @@ void User::test()
 
 int User::find_cmds()
 {
-	const char* tab[] = {"NICK", "USER"};
+	const char* tab[] = {"NICK", "USER", "PING"};
 	std::list<std::string> _cmds(tab, tab + sizeof(tab) / sizeof(char*) );
 	std::list<std::string>::iterator _it;
 	int i = 0;
@@ -82,7 +82,7 @@ int User::find_cmds()
 	return (-1);
 }
 
-void User::cmds()
+void User::cmds_register()
 {	
 	std::string _rpl[8] = {
 		RPL_WELCOME(_server, _name), 
@@ -116,6 +116,38 @@ void User::cmds()
 				_server->sendfds_serv(_so, _rpls);
 			}
             break ;	
+	}
+	default:
+		break;
+	}
+}
+
+
+void User::cmds()
+{
+	std::vector<std::string> _rpl;
+	switch (find_cmds())
+	{
+	case 1:
+	{
+		setup_nick();
+		break ;
+	}
+	case 2:
+	{
+		break ;
+	}
+	case 3:
+	{	
+		_rpl.push_back(RPL_PING(_server, _name, _str.substr(0, 5)));
+		_server->sendfds_serv(_so, _rpl);
+		break ;
+	}
+	case 4:
+	{
+		_rpl.push_back(RPL_PONG(_server, _name, _str.substr(0, 5)));
+		_server->sendfds_serv(_so, _rpl);
+		break ;
 	}
 	default:
 		break;
