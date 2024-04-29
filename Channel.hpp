@@ -6,11 +6,16 @@
 class Chan : public User
 {
 	private:
-	std::map<char, int> _modes;
-	std::string _topic;
+		std::map<int, std::string> _users;
+		static std::string _topic;
+		static int _opfd;
+		static std::string _opstr;
+		static int _i;
+		static int _t;
+		static int _o;
+		static int _l;
 
-	public:
-	
+	public:	
 
 };
 

@@ -9,7 +9,7 @@
 #include "Rply.hpp"
 #include <algorithm>
 #include <cstdlib>
-#include "Channel.hpp"
+//#include "Channel.hpp"
 
 class Chan;
 class Server;
@@ -19,11 +19,12 @@ class User
     private:
         std::string _name, _pass, _userMode, _username, _realname;
         int _so;
-        std::list<Chan*> _chan;
+     //   std::map<Chan*, std::string> _chan;
         std::string _str;
         pollfd _fd;
         int _regis;
         Server * _server;
+
     public:
 		typedef void (*f)();
         User(int, Server &);
@@ -44,6 +45,7 @@ class User
         void registration();
         void setup_nick();
 		void setup_user();
+		void set_mode();
 		void test();
 		void trim_cmds(size_t);
 		void cmds_register();

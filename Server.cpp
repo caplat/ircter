@@ -22,7 +22,7 @@ void Server::set_host()
 	_init.ai_family = AF_INET;
 	_init.ai_flags = AI_PASSIVE;
 	_init.ai_socktype = SOCK_STREAM;
-	int _test = getaddrinfo(0, "4263", &_init, &_host);
+	int _test = getaddrinfo(0, "4264", &_init, &_host);
 	std::cout << _test << std::endl;
 	if (_test != 0)
 	{
@@ -91,25 +91,18 @@ void Server::readfds_serv(int fd)
 		_us->setstr(_buff_read);
 		bzero(_buff_read, _BUFF_SIZE);	
 	}
-	if (!_us->getregis())
-	{
-		std::cout << "Registration\n";
-		std::cout << _us->getstr() << std::endl;
-		_us->registration();
-	}
-	else
-	{
-		std::cout << _us->getstr() << std::endl;
-	}
+	std::cout << RED_TEXT << ">>" <<_us->getstr() << RESET_TEXT << std::endl;
+	_us->registration();
 }
 
-void Server::sendfds_serv(int fd, std::vector<std::string> rpl)
+void Server::sendfds_serv(int fd)
 {
-	for (size_t i = 0; i < rpl.size(); i++)
+	for (size_t i = 0; i < _rpl.size(); i++)
 	{
-		if(rpl[i].size() < 512)
+		if(_rpl[i].size() < 512)
 		{
-			send(fd, rpl[i].c_str(), rpl[i].size(), 0);
+			send(fd, _rpl[i].c_str(), _rpl[i].size(), 0);
+			std::cout << GREEN_TEXT << "<<" << _rpl[i] << RESET_TEXT << std::endl;
 		}
 	}
 	
@@ -129,11 +122,6 @@ void Server::run_serv()
 		int status = poll(_poll, _size_poll, 2000);
 		if(status  == 0 || status == -1)
 		{
-			for (size_t i = 0; i < _size_poll; i++)
-			{
-				std::cout << _poll[i].revents << std::endl;
-			}
-			std::cout << "Server waitting..." << "status : " << status << std::endl;
 			continue ;
 		}
 		else if (getRevents() > 0)
@@ -144,14 +132,7 @@ void Server::run_serv()
 				accept_conection_serv();
 			 }
 			 else
-			 {
-				std::cout << "Read\n";
-				for (size_t i = 0; i < _size_poll; i++)
-				{
-					std::cout << _poll[i].revents << std::endl;
-				}
 				readfds_serv(_fd);
-			 }
 		}
 	}
 }
@@ -206,7 +187,15 @@ User* Server::findUser(int fd)
 	throw ;
 }
 
+void Server::set_rpl(std::string _str)
+{
+	_rpl.push_back(_str);
+}
 
+void Server::clear_rpl()
+{
+	_rpl.clear();
+}
 
 //User
 std::ostream& operator<<(std::ostream & f, Server &s) 

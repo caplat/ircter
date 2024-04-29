@@ -1,6 +1,6 @@
 #include "User.hpp"
 
-User::User(int fd, Server &_serv) : _so(fd), _regis(0), _server(&_serv){
+User::User(int fd, Server &_serv) : _userMode("irO"), _so(fd), _regis(0), _server(&_serv){
     _fd.fd = fd;
     _fd.events = POLLIN;
 }
@@ -47,11 +47,13 @@ void User::registration()
         try
 		{
        		_end = _str.find("\r\n");
-			std::cout << "\\r\\n : " << _end << std::endl;
        		if (_end == std::string::npos)
        		    throw(-1);
 			trim_cmds(_end);
-			cmds_register();
+			if (!_regis)
+				cmds_register();
+			else
+				cmds();
         }
         catch (int test)
         {
@@ -69,7 +71,7 @@ void User::test()
 
 int User::find_cmds()
 {
-	const char* tab[] = {"NICK", "USER", "PING"};
+	const char* tab[] = {"NICK", "USER", "PING", "PONG", "JOIN", "MODE"};
 	std::list<std::string> _cmds(tab, tab + sizeof(tab) / sizeof(char*) );
 	std::list<std::string>::iterator _it;
 	int i = 0;
@@ -84,73 +86,84 @@ int User::find_cmds()
 
 void User::cmds_register()
 {	
-	std::string _rpl[8] = {
-		RPL_WELCOME(_server, _name), 
-		RPL_YOURHOST(_server, _name),
-		RPL_CREATED(_server, _name),
-		RPL_MYINFO(_server, _name),
-		RPL_ISUPPORT(_server, _name),
-		RPL_MOTD(_server, _name),
-		RPL_ENDOFMOTD(_server, _name),
-		RPL_UMODEIS(_server, _name, "i") //Beosin de la commande Mode pour mettre le +i sur IRC
-};
-	std::vector<std::string> _rpls(_rpl, _rpl + sizeof(_rpl) / sizeof(_rpl[0]));
 	switch (find_cmds())
 	{
 	case 0:
-	{
             setup_nick();
-			if (_regis)
-			{
-				std::cout << "The registration is finished\n"; 
-				_server->sendfds_serv(_so, _rpls);	
-			}
 			break;
-	}
     case 1:
 	{
             setup_user();
-			if (_regis)
-			{
-				std::cout << "The registration is finished\n"; 
-				_server->sendfds_serv(_so, _rpls);
-			}
+			_server->sendfds_serv(_so);
             break ;	
 	}
 	default:
 		break;
+	}
+	if (_regis)
+	{
+		_server->set_rpl(RPL_WELCOME(_server, _name));
+		_server->set_rpl(RPL_YOURHOST(_server, _name));
+		_server->set_rpl(RPL_CREATED(_server, _name));
+		_server->set_rpl(RPL_MYINFO(_server, _name));
+		_server->set_rpl(RPL_ISUPPORT(_server, _name));
+		_server->set_rpl(RPL_MOTD(_server, _name));
+		_server->set_rpl(RPL_ENDOFMOTD(_server, _name));
+		_server->set_rpl(RPL_UMODEIS(_server, _name, "i")); //Beosin de la commande Mode pour mettre le +i sur IRC
+		_server->sendfds_serv(_so);
+		_server->clear_rpl();
 	}
 }
 
 
 void User::cmds()
 {
-	std::vector<std::string> _rpl;
-	switch (find_cmds())
+	try
 	{
-	case 1:
+		switch (find_cmds())
+		{
+		case 0:
+		{
+			setup_nick();
+			break ;
+		}
+		case 1:
+		{
+			break ;
+		}
+		case 2:
+		{	
+			_server->set_rpl(RPL_PING(_server, _name, _str.substr(0, 5)));
+			break ;
+		}
+		case 3:
+		{
+			_server->set_rpl(RPL_PONG(_server, _name, _str.substr(0, 5)));
+			break ;
+		}
+		case 4:
+		{
+			std::cout << "Join\n";
+			break ;
+		}
+		case 5:
+		{
+			std::cout << "MODE" << std::endl;
+			set_mode();
+			_server->set_rpl(RPL_MODE(_server, _name, _userMode));
+			break ;
+		}
+		default:
+			break;
+		}
+		_server->sendfds_serv(_so);
+		_server->clear_rpl();
+	}
+	catch(std::string &what)
 	{
-		setup_nick();
-		break ;
-	}
-	case 2:
-	{
-		break ;
-	}
-	case 3:
-	{	
-		_rpl.push_back(RPL_PING(_server, _name, _str.substr(0, 5)));
-		_server->sendfds_serv(_so, _rpl);
-		break ;
-	}
-	case 4:
-	{
-		_rpl.push_back(RPL_PONG(_server, _name, _str.substr(0, 5)));
-		_server->sendfds_serv(_so, _rpl);
-		break ;
-	}
-	default:
-		break;
+		_server->set_rpl(what);
+		_server->sendfds_serv(_so);
+		_server->clear_rpl();
 	}
 }
 
@@ -189,8 +202,6 @@ void User::setup_nick()
         }
         _len++;
     }
-	std::cout << "Setup NICK\n";
-	std::cout << "len of nickname : " << _len << std::endl;
     _name.append(_str, _str.find(' ') + 1, _len);
     if (!_name.empty() && !_username.empty())
         _regis = 1;
@@ -208,27 +219,51 @@ void User::setup_user()
 		std::cout << "you forgot the parameter" << std::endl;
 		return ;
 	}
-	std::cout << "first space : " <<_index << std::endl;
 	while(isalpha(_str[++_index]))
         _usern++;
  	_index = _str.find(' ', _index);
-	std::cout << "second space : " <<_index << std::endl;
 	_index = _str.find(' ', ++_index);
-	std::cout << "third space : " <<_index << std::endl;
 	_index = _str.find(' ', ++_index);
-	std::cout << "fourth space : " <<_index << std::endl;
 	if (_str[++_index] != ':')
 		--_index;
 	while((isalpha(_str[++_index]) || isspace(_str[_index])) && _index < _str.size() -2)
         _rn++;
 	if(_usern > 0 && _rn > 0)
 	{
-		std::cout << "Setup username \t realname\n";
  		_username.append(_str, _str.find(' ') + 1, _usern);
  		_realname.append(_str, _index - _rn, _rn);
-		std::cout << "Username : " << _username << std::endl;
-		std::cout << "Realname : " << _realname << std::endl;
 	}
 	if(!_name.empty() && !_username.empty())
 		_regis = 1;
+}
+
+void User::set_mode()
+{
+	size_t _index;
+	int	_signe = 1;
+	_index = _str.compare(_str.find(' ') + 1, _name.size(), _name) ;
+	if (_index)
+		throw ERR_USERSDONTMATCH(_server, _name);
+	_index = _str.find(_name, _str.find(' ')) + _name.size();
+	while (_index < _str.size() -2 && (_str.find_first_of("+-", _index) != std::string::npos || isspace(_str[_index])))
+	{
+		if (_str[_index] == '+')
+			_signe = 1;
+		else if (_str[_index] == '-')
+			_signe *= -1;
+		else if (!isspace(_str[_index]))
+			_signe = 0;
+		if (_signe == 0)
+			return ;
+		while(isalpha(_str[++_index]) && _index < _str.size() - 2)
+		{
+			if (_str.find_first_of("irO", _index) != std::string::npos)
+			{
+				if (_signe == 1 && _userMode.find(_str[_index]) == std::string::npos)
+					_userMode.push_back(_str[_index]);
+				else if (_signe == -1 && _userMode.find(_str[_index]) != std::string::npos)
+					_userMode.erase(_userMode.find(_str[_index]));
+			}
+		}
+	}
 }
