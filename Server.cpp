@@ -22,7 +22,7 @@ void Server::set_host()
 	_init.ai_family = AF_INET;
 	_init.ai_flags = AI_PASSIVE;
 	_init.ai_socktype = SOCK_STREAM;
-	int _test = getaddrinfo(0, "4264", &_init, &_host);
+	int _test = getaddrinfo(0, "4263", &_init, &_host);
 	std::cout << _test << std::endl;
 	if (_test != 0)
 	{
@@ -185,6 +185,17 @@ User* Server::findUser(int fd)
 	}
 	std::cout << "User not Found\n";
 	throw ;
+}
+
+User* Server::findUserbyname(std::string _name)
+{
+	for (_ituser i = _users.begin(); i != _users.end(); i++)
+	{
+		std::cout << i->second.get_name() << " || " << _name << " = " << _name.compare(i->second.get_name()) << std::endl;
+		if(!_name.compare(0, _name.size() - 2, i->second.get_name()))
+			return (&i->second);
+	}
+	return (NULL);
 }
 
 void Server::set_rpl(std::string _str)

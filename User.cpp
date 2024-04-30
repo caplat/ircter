@@ -1,6 +1,6 @@
 #include "User.hpp"
 
-User::User(int fd, Server &_serv) : _userMode("irO"), _so(fd), _regis(0), _server(&_serv){
+User::User(int fd, Server &_serv) : _userMode(""), _so(fd), _regis(0), _server(&_serv){
     _fd.fd = fd;
     _fd.events = POLLIN;
 }
@@ -34,6 +34,11 @@ Server* User::getServer()
 }
 
 
+std::string User::get_name()
+{
+	return (_name);
+}
+
 void User::setstr(char * str)
 {
     _str.append(str);
@@ -48,14 +53,14 @@ void User::registration()
 		{
        		_end = _str.find("\r\n");
        		if (_end == std::string::npos)
-       		    throw(-1);
+       		    throw(std::string("no \\r\\n"));
 			trim_cmds(_end);
 			if (!_regis)
 				cmds_register();
 			else
 				cmds();
         }
-        catch (int test)
+        catch (std::string &test)
         {
             std::cout << test << std::endl;
         }
@@ -109,7 +114,6 @@ void User::cmds_register()
 		_server->set_rpl(RPL_ISUPPORT(_server, _name));
 		_server->set_rpl(RPL_MOTD(_server, _name));
 		_server->set_rpl(RPL_ENDOFMOTD(_server, _name));
-		_server->set_rpl(RPL_UMODEIS(_server, _name, "i")); //Beosin de la commande Mode pour mettre le +i sur IRC
 		_server->sendfds_serv(_so);
 		_server->clear_rpl();
 	}
@@ -150,7 +154,6 @@ void User::cmds()
 		{
 			std::cout << "MODE" << std::endl;
 			set_mode();
-			_server->set_rpl(RPL_MODE(_server, _name, _userMode));
 			break ;
 		}
 		default:
@@ -189,22 +192,24 @@ void User::setup_nick()
     size_t _len = 0;
 	std::string _valid = "\\[]{}";
 	if (_index == _str.size() -3 || _index == std::string::npos || isdigit(_str[_index + 1]))
-	{
-		std::cout << "you forgot the parameter" << std::endl;
-		return ;
-	}
+		throw (ERR_NONICKNAMEGIVEN(_server, _name));
     while (++_index < _str.find("\r\n"))
     {
         if(!isalnum(_str[_index]) && std::find(_valid.begin(), _valid.end(), _str[_index]) != _valid.end())
-        {
-            std::cout << "Error nickname\n";
-            return ;
-        }
+			throw (ERR_ERRONEUSNICKNAME(_server, _name));
         _len++;
     }
-    _name.append(_str, _str.find(' ') + 1, _len);
-    if (!_name.empty() && !_username.empty())
+	if (_server->findUserbyname(_str.substr(_str.find(' ') + 1)))
+		throw (ERR_NICKNAMEINUSE(_server, _name));
+	std::string _oldname = _name;
+	_name.clear();
+	_name.append(_str, _str.find(' ') + 1, _len);
+    if (!_name.empty() && !_username.empty() && _regis == 0)
         _regis = 1;
+	else if (_regis == 1)
+	{
+		_server->set_rpl(RPL_NICK(_server, _oldname, _name));
+	}
 
        
 }
@@ -260,9 +265,15 @@ void User::set_mode()
 			if (_str.find_first_of("irO", _index) != std::string::npos)
 			{
 				if (_signe == 1 && _userMode.find(_str[_index]) == std::string::npos)
+				{
 					_userMode.push_back(_str[_index]);
+					_server->set_rpl(RPL_MODE(_server, _name, "+", _str.substr(_index, 1)));
+				}
 				else if (_signe == -1 && _userMode.find(_str[_index]) != std::string::npos)
-					_userMode.erase(_userMode.find(_str[_index]));
+				{
+					_userMode.erase(_userMode.find(_str[_index]), _userMode.find(_str[_index]) + 1);
+					_server->set_rpl(RPL_MODE(_server, _name, "-", _str.substr(_index, 1)));
+				}
 			}
 		}
 	}

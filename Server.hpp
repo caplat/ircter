@@ -35,6 +35,7 @@ class Server
 		std::string gethostname_srv();
 		std::map<int, User>& getUsers();
 		User* findUser(int);
+		User* findUserbyname(std::string);
 
 		void makepollfd_fds();
 		void make_sockserv();
