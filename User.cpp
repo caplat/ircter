@@ -54,7 +54,8 @@ void User::registration()
        		_end = _str.find("\r\n");
        		if (_end == std::string::npos)
        		    throw(std::string("no \\r\\n"));
-			trim_cmds(_end);
+			_cmd = _str.substr(0, _end);
+			trim_cmds();
 			if (!_regis)
 				cmds_register();
 			else
@@ -82,7 +83,7 @@ int User::find_cmds()
 	int i = 0;
 	for (_it = _cmds.begin(); _it != _cmds.end(); _it++)
 	{
-		if (_str.compare(0, 4, *_it) == 0)
+		if (_cmd.compare(0, 4, *_it) == 0)
 			return (i);
 		i++;
 	}
@@ -115,8 +116,8 @@ void User::cmds_register()
 		_server->set_rpl(RPL_MOTD(_server, _name));
 		_server->set_rpl(RPL_ENDOFMOTD(_server, _name));
 		_server->sendfds_serv(_so);
-		_server->clear_rpl();
 	}
+	_cmd.clear();
 }
 
 
@@ -137,12 +138,12 @@ void User::cmds()
 		}
 		case 2:
 		{	
-			_server->set_rpl(RPL_PING(_server, _name, _str.substr(0, 5)));
+			_server->set_rpl(RPL_PING(_server, _name, _cmd.substr(0, 5)));
 			break ;
 		}
 		case 3:
 		{
-			_server->set_rpl(RPL_PONG(_server, _name, _str.substr(0, 5)));
+			_server->set_rpl(RPL_PONG(_server, _name, _cmd.substr(0, 5)));
 			break ;
 		}
 		case 4:
@@ -152,7 +153,6 @@ void User::cmds()
 		}
 		case 5:
 		{
-			std::cout << "MODE" << std::endl;
 			set_mode();
 			break ;
 		}
@@ -160,83 +160,79 @@ void User::cmds()
 			break;
 		}
 		_server->sendfds_serv(_so);
-		_server->clear_rpl();
+		_cmd.clear();
 	}
 	catch(std::string &what)
 	{
 		_server->set_rpl(what);
 		_server->sendfds_serv(_so);
-		_server->clear_rpl();
+		_cmd.clear();
 	}
 }
 
-void User::trim_cmds(size_t _endcmds)
+void User::trim_cmds()
 {
 	size_t _len = 0;
 	bool double_point = 0;
-	for (size_t i = 0; i < _endcmds; i++)
+	for (size_t i = 0; i < _cmd.size(); i++)
 	{
 		_len = 0;
-		if (_str[i] == ':')
+		if (_cmd[i] == ':')
 			double_point = 1;
-		while(isspace(_str[i++]))
+		while(isspace(_cmd[i++]))
 			_len++;
 		if (_len > 1 && !double_point)
-			_str = _str.erase(i - _len, _len - 1);
+			_cmd = _cmd.erase(i - _len, _len - 1);
 	}
 }
 
 void User::setup_nick()
 {
-    size_t _index = _str.find(' ');
-    size_t _len = 0;
+    size_t _index = _cmd.find(' ');
 	std::string _valid = "\\[]{}";
-	if (_index == _str.size() -3 || _index == std::string::npos || isdigit(_str[_index + 1]))
+	if (_index == _cmd.size() - 1|| _index == std::string::npos || isdigit(_cmd[_index + 1]))
 		throw (ERR_NONICKNAMEGIVEN(_server, _name));
-    while (++_index < _str.find("\r\n"))
+    while (++_index < _cmd.size())
     {
-        if(!isalnum(_str[_index]) && std::find(_valid.begin(), _valid.end(), _str[_index]) != _valid.end())
+        if(!isalnum(_cmd[_index]) && std::find(_valid.begin(), _valid.end(), _cmd[_index]) != _valid.end())
 			throw (ERR_ERRONEUSNICKNAME(_server, _name));
-        _len++;
     }
-	if (_server->findUserbyname(_str.substr(_str.find(' ') + 1)))
-		throw (ERR_NICKNAMEINUSE(_server, _name));
+	if (_server->findUserbyname(_cmd.substr(_cmd.find(' ') + 1)))
+		throw (ERR_NICKNAMEINUSE(_server, _name, _cmd.substr(_cmd.find(' ') + 1)));
 	std::string _oldname = _name;
 	_name.clear();
-	_name.append(_str, _str.find(' ') + 1, _len);
+	_name.append(_cmd, _cmd.find(' ') + 1);
     if (!_name.empty() && !_username.empty() && _regis == 0)
         _regis = 1;
 	else if (_regis == 1)
 	{
 		_server->set_rpl(RPL_NICK(_server, _oldname, _name));
-	}
-
-       
+	}     
 }
 
 void User::setup_user()
 {
     size_t _usern = 0;
     size_t _rn = 0;
-	size_t _index = _str.find(' ');
-	if (_index == _str.size() -2 || _index == std::string::npos)
+	size_t _index = _cmd.find(' ');
+	if (_index == _cmd.size() - 1 || _index == std::string::npos)
 	{
 		std::cout << "you forgot the parameter" << std::endl;
 		return ;
 	}
-	while(isalpha(_str[++_index]))
+	while(isalpha(_cmd[++_index]))
         _usern++;
- 	_index = _str.find(' ', _index);
-	_index = _str.find(' ', ++_index);
-	_index = _str.find(' ', ++_index);
-	if (_str[++_index] != ':')
+ 	_index = _cmd.find(' ', _index);
+	_index = _cmd.find(' ', ++_index);
+	_index = _cmd.find(' ', ++_index);
+	if (_cmd[++_index] != ':')
 		--_index;
-	while((isalpha(_str[++_index]) || isspace(_str[_index])) && _index < _str.size() -2)
+	while((isalpha(_cmd[++_index]) || isspace(_cmd[_index])) && _index < _cmd.size())
         _rn++;
 	if(_usern > 0 && _rn > 0)
 	{
- 		_username.append(_str, _str.find(' ') + 1, _usern);
- 		_realname.append(_str, _index - _rn, _rn);
+ 		_username.append(_cmd, _cmd.find(' ') + 1, _usern);
+ 		_realname.append(_cmd, _index - _rn, _rn);
 	}
 	if(!_name.empty() && !_username.empty())
 		_regis = 1;
@@ -246,35 +242,43 @@ void User::set_mode()
 {
 	size_t _index;
 	int	_signe = 1;
-	_index = _str.compare(_str.find(' ') + 1, _name.size(), _name) ;
+	_index = _cmd.compare(_cmd.find(' ') + 1, _name.size(), _name) ;
 	if (_index)
 		throw ERR_USERSDONTMATCH(_server, _name);
-	_index = _str.find(_name, _str.find(' ')) + _name.size();
-	while (_index < _str.size() -2 && (_str.find_first_of("+-", _index) != std::string::npos || isspace(_str[_index])))
+	_index = _cmd.find(_name, _str.find(' ')) + _name.size();
+	if (_index == _cmd.size())
+		throw RPL_UMODEIS(_server, _name, _userMode);
+	while (_index < _cmd.size() && (_cmd.find_first_of("+-", _index) != std::string::npos || isspace(_cmd[_index])))
 	{
-		if (_str[_index] == '+')
+		if (_cmd[_index] == '+')
 			_signe = 1;
-		else if (_str[_index] == '-')
+		else if (_cmd[_index] == '-' && _signe != -1)
 			_signe *= -1;
-		else if (!isspace(_str[_index]))
+		else if (!isspace(_cmd[_index]) && !(std::string("+-").find(_cmd[_index])) && !isalpha(_cmd[_index]))
 			_signe = 0;
 		if (_signe == 0)
-			return ;
-		while(isalpha(_str[++_index]) && _index < _str.size() - 2)
+			throw (std::string("PB syntaxe"));
+		while(isalpha(_cmd[++_index]) && _index < _cmd.size())
 		{
-			if (_str.find_first_of("irO", _index) != std::string::npos)
+			if (std::string("irO").find(_cmd[_index]) != std::string::npos)
 			{
-				if (_signe == 1 && _userMode.find(_str[_index]) == std::string::npos)
+				if (_signe == 1 && _userMode.find(_cmd[_index]) == std::string::npos)
 				{
-					_userMode.push_back(_str[_index]);
-					_server->set_rpl(RPL_MODE(_server, _name, "+", _str.substr(_index, 1)));
+					_userMode.push_back(_cmd[_index]);
+					_server->set_rpl(RPL_MODE(_server, _name, "+", _cmd.substr(_index, 1)));
 				}
-				else if (_signe == -1 && _userMode.find(_str[_index]) != std::string::npos)
+				else if (_signe == -1 && _userMode.find(_cmd[_index]) != std::string::npos)
 				{
-					_userMode.erase(_userMode.find(_str[_index]), _userMode.find(_str[_index]) + 1);
-					_server->set_rpl(RPL_MODE(_server, _name, "-", _str.substr(_index, 1)));
+					_userMode.erase(_userMode.find(_cmd[_index]), _userMode.find(_cmd[_index]));
+					_server->set_rpl(RPL_MODE(_server, _name, "-", _cmd.substr(_index, 1)));
 				}
 			}
+			else
+			{
+				_server->set_rpl(ERR_UMODEUNKNOWNFLAG(_server, _name));
+			}
+
+			std::cout << _cmd[_index] << "\t mode active : " << _userMode << std::endl;
 		}
 	}
 }

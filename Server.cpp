@@ -4,8 +4,15 @@ Server::Server()
 {
 	_poll = NULL;
 	_size_poll = 0;
-	set_host();
-	make_sockserv();
+	try
+	{
+		set_host();     	
+		make_sockserv();
+	}
+	catch(int e)
+	{
+		std::cerr << e << '\n';
+	}
 }
 
 Server::~Server()
@@ -23,16 +30,12 @@ void Server::set_host()
 	_init.ai_flags = AI_PASSIVE;
 	_init.ai_socktype = SOCK_STREAM;
 	int _test = getaddrinfo(0, "4263", &_init, &_host);
-	std::cout << _test << std::endl;
 	if (_test != 0)
 	{
 		std::cout << errno << std::strerror(errno) << std::endl;
-		return ;
+		throw (-1);
 	}
-	else
-		std::cout << "Getaddrinfo is ok" << std::endl;
 	gethostname(_hostname, sizeof(_hostname));
-	std::cout << (std::string)_hostname << std::endl;
 }
 
 void Server::make_sockserv()
@@ -91,7 +94,7 @@ void Server::readfds_serv(int fd)
 		_us->setstr(_buff_read);
 		bzero(_buff_read, _BUFF_SIZE);	
 	}
-	std::cout << RED_TEXT << ">>" <<_us->getstr() << RESET_TEXT << std::endl;
+	std::cout << RED_TEXT << ">>" <<_us->getstr() << RESET_TEXT;
 	_us->registration();
 }
 
@@ -102,9 +105,10 @@ void Server::sendfds_serv(int fd)
 		if(_rpl[i].size() < 512)
 		{
 			send(fd, _rpl[i].c_str(), _rpl[i].size(), 0);
-			std::cout << GREEN_TEXT << "<<" << _rpl[i] << RESET_TEXT << std::endl;
+			std::cout << GREEN_TEXT << "<<" << _rpl[i] << RESET_TEXT;
 		}
 	}
+	_rpl.clear();
 	
 
 }
@@ -192,7 +196,7 @@ User* Server::findUserbyname(std::string _name)
 	for (_ituser i = _users.begin(); i != _users.end(); i++)
 	{
 		std::cout << i->second.get_name() << " || " << _name << " = " << _name.compare(i->second.get_name()) << std::endl;
-		if(!_name.compare(0, _name.size() - 2, i->second.get_name()))
+		if(!_name.compare(0, _name.size(), i->second.get_name()))
 			return (&i->second);
 	}
 	return (NULL);

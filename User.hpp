@@ -9,7 +9,7 @@
 #include "Rply.hpp"
 #include <algorithm>
 #include <cstdlib>
-//#include "Channel.hpp"
+#include "Channel.hpp"
 
 class Chan;
 class Server;
@@ -19,14 +19,14 @@ class User
     private:
         std::string _name, _pass, _userMode, _username, _realname;
         int _so;
-     //   std::map<Chan*, std::string> _chan;
+     	std::map<Chan*, User&> _chan;
         std::string _str;
+		std::string _cmd;
         pollfd _fd;
         int _regis;
         Server * _server;
 
     public:
-		typedef void (*f)();
         User(int, Server &);
         ~User();
         int getsock();
@@ -47,7 +47,7 @@ class User
 		void setup_user();
 		void set_mode();
 		void test();
-		void trim_cmds(size_t);
+		void trim_cmds();
 		void cmds_register();
 		void cmds();
 		int find_cmds();

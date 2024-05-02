@@ -31,9 +31,10 @@ class Server;
 
 #define RPL_ENDOFMOTD(server, nick) (BEGIN_RPL(server) + " 376 " + nick + " :END of /MOTD command.\r\n")
 
-#define RPL_UMODEIS(server, nick, mode) (BEGIN_RPL(server) + " 221 " + nick + " :"  + nick + " " + mode + "\r\n") 
+#define RPL_UMODEIS(server, nick, mode) (BEGIN_RPL(server) + " 221 " + nick + " :+" + mode + "\r\n") 
 #define RPL_MODE(server, nick, signe, mode) (BEGIN_RPL(server) + " MODE " + nick + " :" + signe + mode + "\r\n") 
-#define ERR_USERSDONTMATCH(server, nick) (BEGIN_RPL(server) + " 502 " + nick + " :Can't changemode for other users\r\n") 
+#define ERR_UMODEUNKNOWNFLAG(server, nick) (BEGIN_RPL(server) + " 501 " + nick + " :Unknown MODE flag\r\n") 
+#define ERR_USERSDONTMATCH(server, nick) (BEGIN_RPL(server) + " 502 " + nick + " :Can't change mode for other users\r\n") 
 
 #define RPL_PING(server, nick, str) (BEGIN_RPL(server) + " PONG " + nick + " :" + str + "\r\n")
 #define RPL_PONG(server, nick, str) (BEGIN_RPL(server) + " PING " + nick + " :" + str + "\r\n")
@@ -42,6 +43,6 @@ class Server;
 #define RPL_NICK(server, oldnick, nick) (":" + oldnick + "!d@lcoalhost" +  " NICK " + nick  + "\r\n")
 #define ERR_NONICKNAMEGIVEN(server, nick) (BEGIN_RPL(server) + " 431 " + nick + " :No nickname given\r\n")
 #define ERR_ERRONEUSNICKNAME(server, nick) (BEGIN_RPL(server) + " 432 " + nick + " :Erroneus nickname\r\n")
-#define ERR_NICKNAMEINUSE(server, nick) (BEGIN_RPL(server) + " 433 " + nick + " :Nickname is already in use\r\n")
+#define ERR_NICKNAMEINUSE(server, nick, newnick) (BEGIN_RPL(server) + " 433 " + nick + " :" + newnick + "\r\n")
 
 #endif
