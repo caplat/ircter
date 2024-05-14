@@ -10,16 +10,17 @@
 #include <algorithm>
 #include <cstdlib>
 #include "Channel.hpp"
+#include <vector>
 
-class Chan;
 class Server;
+class Chan;
 
 class User
 {
     private:
         std::string _name, _pass, _userMode, _username, _realname;
         int _so;
-     	std::map<Chan*, User&> _chan;
+     	std::vector<Chan*> _chan;
         std::string _str;
 		std::string _cmd;
         pollfd _fd;
@@ -37,6 +38,7 @@ class User
 		std::string get_name();
 		std::string get_pass();
 		std::string get_Usermode();
+		Chan* get_channel(std::string);
 
         void setstr(char*);
 		void set_name(std::string);
@@ -46,6 +48,7 @@ class User
         void setup_nick();
 		void setup_user();
 		void set_mode();
+		void join();
 		void test();
 		void trim_cmds();
 		void cmds_register();

@@ -149,6 +149,7 @@ void User::cmds()
 		case 4:
 		{
 			std::cout << "Join\n";
+			join();
 			break ;
 		}
 		case 5:
@@ -282,3 +283,26 @@ void User::set_mode()
 		}
 	}
 }
+
+void User::join()
+{
+	std::string _sub = _cmd.substr(_cmd.find_last_of(' '));
+	Chan* _exist = _server->already_channel(_sub);
+	if (!_exist)
+	{
+		Chan _new_chan(*this, _sub);
+		_chan.push_back(&_new_chan);
+		_server->set_channel(&_new_chan);
+		std::cout << "User class " << _chan[0]->get_name() << std::endl;
+		_server->set_rpl(RPL_JOIN(_server, _name, _cmd, _sub));
+		_server->set_rpl(RPL_NAMREPLY(_server, _name, _new_chan.get_name(), _new_chan.string_for_rpl()));
+		_server->set_rpl(RPL_ENDOFNAMES(_server, _name, _new_chan.get_name()));
+	}
+	else
+	{
+
+	_server->set_rpl(RPL_NAMREPLY(_server, _name, _exist->get_name(), _exist->string_for_rpl()));
+	}
+}
+
+

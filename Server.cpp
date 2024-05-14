@@ -29,7 +29,7 @@ void Server::set_host()
 	_init.ai_family = AF_INET;
 	_init.ai_flags = AI_PASSIVE;
 	_init.ai_socktype = SOCK_STREAM;
-	int _test = getaddrinfo(0, "4263", &_init, &_host);
+	int _test = getaddrinfo(0, "4264", &_init, &_host);
 	if (_test != 0)
 	{
 		std::cout << errno << std::strerror(errno) << std::endl;
@@ -211,6 +211,24 @@ void Server::clear_rpl()
 {
 	_rpl.clear();
 }
+
+void Server::set_channel(Chan* channel)
+{
+	_chan.push_back(channel);
+}
+
+Chan* Server::already_channel(std::string str)
+{
+	for (size_t i = 0; i < _chan.size(); i++)
+	{
+		if (_chan[i]->get_name() == str)
+			return (_chan[i]);
+	}
+	return (0);
+	
+}
+
+
 
 //User
 std::ostream& operator<<(std::ostream & f, Server &s) 

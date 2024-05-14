@@ -11,6 +11,7 @@
 #define _BUFF_SIZE 20
 
 class User;
+class Chan;
 
 typedef  std::map<int, User>::iterator _ituser;
 class Server
@@ -20,6 +21,7 @@ class Server
 		char _hostname[256];
 		int _sock_serv;
 		std::map<int, User> _users;
+		std::vector<Chan*> _chan;
 		pollfd* _poll;
 		size_t _size_poll;
 		std::vector<std::string> _rpl;
@@ -36,6 +38,8 @@ class Server
 		std::map<int, User>& getUsers();
 		User* findUser(int);
 		User* findUserbyname(std::string);
+		void set_channel(Chan*);
+		Chan* already_channel(std::string);
 
 		void makepollfd_fds();
 		void make_sockserv();
