@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include "Channel.hpp"
 #include <vector>
+#include "utilsTosend.hpp"
 
 class Server;
 class Chan;

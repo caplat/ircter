@@ -22,3 +22,14 @@ std::string getstr_time()
     str += ss.str();
     return (str);
 }
+
+
+std::string to_upper(std::string str)
+{
+	std::string _up;
+	for (size_t i = 0; i < str.size(); i++)
+	{
+		_up.push_back(toupper(str[i]));
+	}
+	return (_up);
+}

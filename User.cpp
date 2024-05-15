@@ -249,7 +249,6 @@ void User::set_mode()
 	_index = _cmd.find(_name, _str.find(' ')) + _name.size();
 	if (_index == _cmd.size())
 		throw RPL_UMODEIS(_server, _name, _userMode);
-	std::cout << "\t mode active : " << _userMode << std::endl;
 	while (_index < _cmd.size() && (_cmd.find_first_of("+-", _index) != std::string::npos || isspace(_cmd[_index])))
 	{
 		if (_cmd[_index] == '+')
@@ -272,12 +271,10 @@ void User::set_mode()
 				}
 				else if (_signe == -1 && _userMode.find(_cmd[_index]) != std::string::npos)
 				{
-					std::cout << "delete" << std::endl;
 					if (_userMode.size() == 1)
 						_userMode.clear();
 					else
 					{
-						std::cout << "at: " << _userMode.at(_userMode.find(_cmd[_index])) << std::endl;
 						_userMode.erase(_userMode.find(_cmd[_index]),_userMode.find(_cmd[_index]));
 					}
 					_server->set_rpl(RPL_MODE(_server, _name, "-", _cmd.substr(_index, 1)));
@@ -287,8 +284,6 @@ void User::set_mode()
 			{
 				_server->set_rpl(ERR_UMODEUNKNOWNFLAG(_server, _name));
 			}
-
-			std::cout << _cmd[_index] << "\t mode active : " << _userMode << std::endl;
 		}
 	}
 }
@@ -296,16 +291,17 @@ void User::set_mode()
 void User::join()
 {
 	std::string _sub = _cmd.substr(_cmd.find_last_of(' '));
-	Chan* _exist = _server->already_channel(_sub);
+	Chan* _exist = _server->already_channel(to_upper(_sub));
+	std::cout << "sub: " << _sub << std::endl;
 	if (!_exist)
 	{
-		Chan _new_chan(*this, _sub);
-		_chan.push_back(&_new_chan);
-		_server->set_channel(&_new_chan);
+		Chan *_new_chan = new Chan(*this, _sub);
+		_chan.push_back(_new_chan);
+		_server->set_channel(_new_chan);
 		std::cout << "User class " << _chan[0]->get_name() << std::endl;
 		_server->set_rpl(RPL_JOIN(_server, _name, _cmd, _sub));
-		_server->set_rpl(RPL_NAMREPLY(_server, _name, _new_chan.get_name(), _new_chan.string_for_rpl()));
-		_server->set_rpl(RPL_ENDOFNAMES(_server, _name, _new_chan.get_name()));
+		_server->set_rpl(RPL_NAMREPLY(_server, _name, _new_chan->get_name(), _new_chan->string_for_rpl()));
+		_server->set_rpl(RPL_ENDOFNAMES(_server, _name, _new_chan->get_name()));
 	}
 	else
 	{

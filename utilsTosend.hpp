@@ -8,5 +8,6 @@
 #include <sstream>
 
 std::string  getstr_time();
+std::string	to_upper(std::string);
 
 #endif

@@ -221,7 +221,7 @@ Chan* Server::already_channel(std::string str)
 {
 	for (size_t i = 0; i < _chan.size(); i++)
 	{
-		if (_chan[i]->get_name() == str)
+		if (to_upper(_chan[i]->get_name()) == str)
 			return (_chan[i]);
 	}
 	return (0);
