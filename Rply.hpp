@@ -45,9 +45,11 @@ class Server;
 #define ERR_ERRONEUSNICKNAME(server, nick) (BEGIN_RPL(server) + " 432 " + nick + " :Erroneus nickname\r\n")
 #define ERR_NICKNAMEINUSE(server, nick, newnick) (BEGIN_RPL(server) + " 433 " + nick + " :" + newnick + "\r\n")
 
+// Channel
 #define RPL_JOIN(server, nick, str, channel) (":" + nick + "!user@host JOIN " + channel+ " " + nick +" :Real Name\r\n")
 #define RPL_NAMREPLY(server, nick, channel,  str) (BEGIN_RPL(server) + " 353 " + nick + " =" + channel + " :" + str + "\r\n")
 #define RPL_ENDOFNAMES(server, nick, channel) (BEGIN_RPL(server) + " 366 " + nick + channel + " :End of /NAMES list"  + "\r\n")
+#define ERR_NOSUCHCHANNEL(server, nick, channel) (BEGIN_RPL(server) + " 403 " + nick + channel + " :No such channel\r\n")
 
 
 #endif

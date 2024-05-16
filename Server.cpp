@@ -29,7 +29,7 @@ void Server::set_host()
 	_init.ai_family = AF_INET;
 	_init.ai_flags = AI_PASSIVE;
 	_init.ai_socktype = SOCK_STREAM;
-	int _test = getaddrinfo(0, "4263", &_init, &_host);
+	int _test = getaddrinfo(0, "4264", &_init, &_host);
 	if (_test != 0)
 	{
 		std::cout << errno << std::strerror(errno) << std::endl;
@@ -109,8 +109,6 @@ void Server::sendfds_serv(int fd)
 		}
 	}
 	_rpl.clear();
-	
-
 }
 
 void Server::run_serv()
@@ -224,7 +222,7 @@ Chan* Server::already_channel(std::string str)
 		if (to_upper(_chan[i]->get_name()) == str)
 			return (_chan[i]);
 	}
-	return (0);
+	return (NULL);
 	
 }
 

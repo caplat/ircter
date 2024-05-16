@@ -290,24 +290,23 @@ void User::set_mode()
 
 void User::join()
 {
-	std::string _sub = _cmd.substr(_cmd.find_last_of(' '));
-	Chan* _exist = _server->already_channel(to_upper(_sub));
-	std::cout << "sub: " << _sub << std::endl;
-	if (!_exist)
+	std::string _sub = _cmd.substr(_cmd.find_last_of(' ') + 1);
+	std::cout << _cmd << std::endl;
+	if (_sub[1]  != '#')
+		throw (ERR_NOSUCHCHANNEL(_server, _name, _sub));
+	Chan *_channel = _server->already_channel(to_upper(_sub));
+	std::cout << "_channel: " << _channel << std::endl;
+	if (!_channel)
 	{
-		Chan *_new_chan = new Chan(*this, _sub);
-		_chan.push_back(_new_chan);
-		_server->set_channel(_new_chan);
-		std::cout << "User class " << _chan[0]->get_name() << std::endl;
-		_server->set_rpl(RPL_JOIN(_server, _name, _cmd, _sub));
-		_server->set_rpl(RPL_NAMREPLY(_server, _name, _new_chan->get_name(), _new_chan->string_for_rpl()));
-		_server->set_rpl(RPL_ENDOFNAMES(_server, _name, _new_chan->get_name()));
-	}
-	else
-	{
+		_channel = new Chan(*this, _sub);
+		_chan.push_back(_channel);
+		_server->set_channel(_channel);
 
-	_server->set_rpl(RPL_NAMREPLY(_server, _name, _exist->get_name(), _exist->string_for_rpl()));
 	}
+		//std::cout << "User class " << _chan[0]->get_name() << std::endl;
+		_server->set_rpl(RPL_JOIN(_server, _name, _cmd, _sub));
+		_server->set_rpl(RPL_NAMREPLY(_server, _name, _channel->get_name(), _channel->string_for_rpl()));
+		_server->set_rpl(RPL_ENDOFNAMES(_server, _name, _channel->get_name()));
 }
 
 

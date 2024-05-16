@@ -41,6 +41,9 @@ std::string Chan::string_for_rpl()
 	for (_it i = _users.begin(); i != _users.end(); i++)
 	{
 		std::cout << i->second << "\t";
+		_str += _users.begin()->second;
+		_str += _users.begin()->first->get_name();
+		_str += " ";
 	}
 	std::cout << "built rpl_string : " << _str << std::endl;
 	return (_str);
