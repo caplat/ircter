@@ -290,23 +290,55 @@ void User::set_mode()
 
 void User::join()
 {
-	std::string _sub = _cmd.substr(_cmd.find_last_of(' ') + 1);
-	std::cout << _cmd << std::endl;
-	if (_sub[1]  != '#')
-		throw (ERR_NOSUCHCHANNEL(_server, _name, _sub));
-	Chan *_channel = _server->already_channel(to_upper(_sub));
-	std::cout << "_channel: " << _channel << std::endl;
-	if (!_channel)
+	std::vector<std::string> _param;
+	size_t _nparam = 0;
+	do
 	{
-		_channel = new Chan(*this, _sub);
-		_chan.push_back(_channel);
-		_server->set_channel(_channel);
-
+		if(_nparam != 0)
+		{
+			if (_cmd.find_first_of(' ', _nparam + 1) != std::string::npos)
+				_param.push_back(_cmd.substr(_nparam + 1, _cmd.find_first_of(' ', _nparam + 1) - _nparam));
+			else
+			{
+				_param.push_back(_cmd.substr(_nparam));
+				
+			}
+			
+		}
+		_nparam = _cmd.find_first_of(' ', _nparam + 1);
 	}
-		//std::cout << "User class " << _chan[0]->get_name() << std::endl;
-		_server->set_rpl(RPL_JOIN(_server, _name, _cmd, _sub));
-		_server->set_rpl(RPL_NAMREPLY(_server, _name, _channel->get_name(), _channel->string_for_rpl()));
-		_server->set_rpl(RPL_ENDOFNAMES(_server, _name, _channel->get_name()));
+	while (_nparam != std::string::npos);
+	if (_param.size() > 2)
+		throw (std::string("too much parameter"));
+	std::string _channelname;
+	size_t i = 0;
+	size_t _cmdlen = _param[0].length();
+	while (i < _cmdlen)	
+	{
+		if ( _param[0].find_first_of(',', i) != std::string::npos)
+		{
+			_channelname = _param[0].substr(i, _param[0].find_first_of(',', i));
+			i =  _param[0].find_first_of(',', i) + 1;
+		}
+		else
+		{
+			_channelname = _param[0].substr(i, _param[0].length()) ;
+			i = _param[0].length();
+		}
+		if (_channelname[0]  != '#')
+			throw (ERR_NOSUCHCHANNEL(_server, _name, _channelname));
+		Chan *_channel = _server->already_channel(to_upper(_channelname));
+		if (!_channel)
+		{
+			_channel = new Chan(*this, _channelname);
+			_chan.push_back(_channel);
+			_server->set_channel(_channel);
+
+		}
+			_server->set_rpl(RPL_JOIN(_server, _name, _cmd, _channelname));
+			_server->set_rpl(RPL_NAMREPLY(_server, _name, _channel->get_name(), _channel->string_for_rpl()));
+			_server->set_rpl(RPL_ENDOFNAMES(_server, _name, _channel->get_name()));
+	}
 }
 
 

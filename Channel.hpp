@@ -13,6 +13,7 @@ class Chan
 		typedef	std::map<User*, std::string>::iterator _it;
 		std::string _name;
 		std::string _topic;
+		std::string _pswd;
 		int _i;
 		int _t;
 		int _o;
