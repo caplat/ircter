@@ -19,7 +19,7 @@ class Chan;
 class User
 {
     private:
-        std::string _name, _pass, _userMode, _username, _realname;
+        std::string _name, _userMode, _username, _realname;
         int _so;
      	std::vector<Chan*> _chan;
         std::string _str;
@@ -34,28 +34,21 @@ class User
         int getsock();
         std::string& getstr();
         int getregis();
+		void setregis();
         Server* getServer();
         pollfd& getpollfd();
 		std::string get_name();
-		std::string get_pass();
-		std::string get_Usermode();
+		std::string get_realname();
+		std::string get_username();
+		std::string get_usermode();
 		Chan* get_channel(std::string);
 
         void setstr(char*);
-		void set_name(std::string);
-		void set_pass(std::string);
-
-        void registration();
-        void setup_nick();
-		void setup_user();
-		void set_mode();
-		void join();
-		void test();
-		void trim_cmds();
-		void cmds_register();
-		void cmds();
-		int find_cmds();
-
+		void set_name(std::string &);
+		void set_username(std::string &);
+		void set_realname(std::string &);
+		void set_usermode(std::string &);
+		void set_channel(Chan &);
 };
 
 

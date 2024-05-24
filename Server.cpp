@@ -78,7 +78,6 @@ void Server::readfds_serv(int fd)
 	std::string  _buffer;
 	char _buff_read[_BUFF_SIZE];
 	User* _us = findUser(fd);
-	std::string _content;
 	long _bytes_r = 1;
 	_bytes_r = recv(fd, _buff_read, _BUFF_SIZE, 0);
 	if (_bytes_r == 0)
@@ -90,12 +89,11 @@ void Server::readfds_serv(int fd)
 	_buff_read[_bytes_r] = 0;
 	if (_bytes_r > 0)
 	{
-		_content.append(_buff_read);
-		_us->setstr(_buff_read);
+		_bufferread.append(_buff_read);
 		bzero(_buff_read, _BUFF_SIZE);	
 	}
-	std::cout << RED_TEXT << ">>" <<_us->getstr() << RESET_TEXT;
-	_us->registration();
+	std::cout << RED_TEXT << ">>" << _bufferread << RESET_TEXT;
+	orders(*_us);
 }
 
 void Server::sendfds_serv(int fd)
@@ -237,4 +235,314 @@ std::ostream& operator<<(std::ostream & f, Server &s)
 		  f << (it->second.getsock()) << std::endl; 
 	  }
 	  return (f);
+}
+
+
+
+//commandes
+
+int Server::find_cmds()
+{
+	const char* tab[] = {"NICK", "USER", "PING", "PONG", "JOIN", "MODE"};
+	std::list<std::string> _cmds(tab, tab + sizeof(tab) / sizeof(char*) );
+	std::list<std::string>::iterator _it;
+	int i = 0;
+	for (_it = _cmds.begin(); _it != _cmds.end(); _it++)
+	{
+		if (_cmd.compare(0, 4, *_it) == 0)
+			return (i);
+		i++;
+	}
+	return (-1);
+}
+
+
+void Server::trim_cmds()
+{
+	size_t _len = 0;
+	bool double_point = 0;
+	for (size_t i = 0; i < _cmd.size(); i++)
+	{
+		_len = 0;
+		if (_cmd[i] == ':')
+			double_point = 1;
+		while(isspace(_cmd[i++]))
+			_len++;
+		if (_len > 1 && !double_point)
+			_cmd = _cmd.erase(i - _len, _len - 1);
+	}
+}
+
+
+void Server::parse_order()
+{
+	size_t _nparam = _cmd.find_first_of(' ', 0);
+	int twopoint = 0;
+	if (_nparam != std::string::npos)
+		_cmdparse.push_back(_cmd.substr(0, _nparam));
+	else
+		_cmdparse.push_back(_cmd.substr(0));
+	while (_nparam != std::string::npos && !twopoint)
+	{
+		if (_cmd[_nparam + 1] == ':')
+		{
+			std::cout << "find two point" << std::endl;
+			twopoint = 1;
+			_nparam++;
+		}
+		if (_cmd.find_first_of(' ', _nparam + 1) != std::string::npos && !twopoint)
+			_cmdparse.push_back(_cmd.substr(_nparam + 1, _cmd.find_first_of(' ', _nparam + 1) - _nparam));
+		else
+			_cmdparse.push_back(_cmd.substr(_nparam + 1));	
+		_nparam = _cmd.find_first_of(' ', _nparam + 1);
+	}
+}
+
+void Server::orders(User &user)
+{
+    size_t _end;
+
+    {
+        try
+		{
+       		_end = _bufferread.find("\r\n");
+       		if (_end == std::string::npos)
+       		    throw(std::string("no \\r\\n"));
+			_cmd = _bufferread.substr(0, _end);
+			trim_cmds();
+			parse_order();
+			if (!user.getregis())
+				cmds_register(user);
+			else
+				run_order(user);
+        }
+        catch (std::string &test)
+        {
+            std::cout << test << std::endl;
+        }
+		if (_end != std::string::npos)
+			_bufferread.erase(0, _end + 2);
+    } 
+}
+
+
+void Server::cmds_register(User &user)
+{	
+	switch (find_cmds())
+	{
+	case 0:
+            nick(user);
+			break;
+    case 1:
+	{
+           this->user(user);
+			sendfds_serv(user.getpollfd().fd);
+            break ;	
+	}
+	default:
+		break;
+	}
+	if (user.getregis())
+	{
+		set_rpl(RPL_WELCOME(this, user.get_name()));
+		set_rpl(RPL_YOURHOST(this, user.get_name()));
+		set_rpl(RPL_CREATED(this, user.get_name()));
+		set_rpl(RPL_MYINFO(this, user.get_name()));
+		set_rpl(RPL_ISUPPORT(this, user.get_name()));
+		set_rpl(RPL_MOTD(this, user.get_name()));
+		set_rpl(RPL_ENDOFMOTD(this, user.get_name()));
+		sendfds_serv(user.getpollfd().fd);
+	}
+	_cmd.clear();
+	_cmdparse.clear();
+}
+
+
+void Server::run_order(User &user)
+{
+	try
+	{
+		switch (find_cmds())
+		{
+		case 0:
+		{
+			nick(user);
+			break ;
+		}
+		case 1:
+		{
+			break ;
+		}
+		case 2:
+		{	
+			set_rpl(RPL_PING(this, user.get_name(), _cmd.substr(0, 5)));
+			break ;
+		}
+		case 3:
+		{
+			set_rpl(RPL_PONG(this, user.get_name(), _cmd.substr(0, 5)));
+			break ;
+		}
+		case 4:
+		{
+			join(user);
+			break ;
+		}
+		case 5:
+		{
+			modeUser(user);
+			break ;
+		}
+		default:
+			break;
+		}
+		sendfds_serv(user.getpollfd().fd);
+		_cmd.clear();
+		_cmdparse.clear();
+	}
+	catch(std::string &what)
+	{
+		set_rpl(what);
+		sendfds_serv(user.getpollfd().fd);
+		_cmd.clear();
+		_cmdparse.clear();
+	}
+}
+
+void Server::nick(User &user)
+{
+    size_t _index = 0;
+	std::string _valid = "\\[]{}";
+	if (_cmdparse.size() < 2 || _index == std::string::npos || isdigit(_cmdparse[1][_index + 1]))
+		throw (ERR_NONICKNAMEGIVEN(this, user.get_name()));
+    while (++_index < _cmd.size())
+    {
+        if(!isalnum(_cmd[_index]) && std::find(_valid.begin(), _valid.end(), _cmd[_index]) != _valid.end())
+			throw (ERR_ERRONEUSNICKNAME(this, user.get_name()));
+    }
+	if (findUserbyname(_cmdparse[1]))
+		throw (ERR_NICKNAMEINUSE(this, user.get_name(), _cmdparse[1]));
+	std::string _oldname = user.get_name();
+	user.set_name(_cmdparse[1]);
+    if (!user.get_name().empty() && !user.get_username().empty() && user.getregis() == 0)
+    	user.setregis();
+	else if (user.getregis())
+	{
+		set_rpl(RPL_NICK(this, _oldname, user.get_name()));
+	}     
+}
+
+void Server::user(User &user)
+{
+	if (_cmdparse.size() < 5)
+	{
+		std::cout << "you forgot the parameter" << std::endl;
+		return ;
+	}
+	if(_cmdparse[1].size() > 0 && _cmdparse[4].size() > 0)
+	{
+		user.set_username(_cmdparse[1]);
+		user.set_realname(_cmdparse[4]);
+		std::cout << "Username: " << _cmdparse[1] << std::endl;
+		std::cout << "Realname: " << _cmdparse[4] << std::endl;
+	}
+	if(!user.get_name().empty() && !user.get_username().empty())
+		user.setregis();
+}
+
+void Server::modeUser(User &user)
+{
+	size_t _index = 0;
+	size_t j = 2;
+	std::string _mode = user.get_usermode();
+	int	_signe = 1;
+	if (_cmdparse[1].compare(0, user.get_name().size(), user.get_name()) != 0)
+		throw ERR_USERSDONTMATCH(this, user.get_name());
+	if (_cmdparse.size() < 3)
+		throw RPL_UMODEIS(this, user.get_name(), user.get_usermode());
+	while (_cmdparse.size() > j)
+	{
+		if (_cmdparse[j][_index] == '+')
+			_signe = 1;
+		else if (_cmdparse[j][_index] == '-' && _signe != -1)
+			_signe *= -1;
+		else if (!isspace(_cmdparse[j][_index]) && !(std::string("+-").find(_cmdparse[j][_index])) && !isalpha(_cmdparse[j][_index]))
+			_signe = 0;
+		if (_signe == 0)
+			throw (std::string("PB syntaxe"));
+		while(isalpha(_cmdparse[j][++_index]) && _index < _cmdparse[j].size())
+		{
+			std::cout << _cmdparse[j][_index] << std::endl;
+			if (std::string("irO").find(_cmdparse[j][_index]) != std::string::npos)
+			{
+				if (_signe == 1 && _mode.find(_cmdparse[j][_index]) == std::string::npos)
+				{
+					_mode.push_back(_cmdparse[j][_index]);
+					set_rpl(RPL_MODE(this, user.get_name(), "+", _cmdparse[j].substr(_index, 1)));
+				}
+				else if (_signe == -1 && _mode.find(_cmdparse[j][_index]) != std::string::npos)
+				{
+					if (_mode.size() == 1)
+						_mode.clear();
+					else
+						_mode.erase(_mode.find(_cmdparse[j][_index]),_mode.find(_cmdparse[j][_index]));
+					set_rpl(RPL_MODE(this, user.get_name(), "-", _cmdparse[j].substr(_index, 1)));
+				}
+			}
+			else
+				set_rpl(ERR_UMODEUNKNOWNFLAG(this, user.get_name()));
+		}
+		if (_index >= _cmdparse[j].size())
+		{
+			j++;
+			_index = 0;
+		}
+	}
+	user.set_usermode(_mode);
+}
+
+
+
+void Server::join(User &user)
+{
+	if (_cmdparse.size() > 3)
+		throw (std::string("too much parameter"));
+	std::string _channelname;
+	std::string _passwordchannel;
+	size_t _indexchannelname = 0;
+	size_t _indexpaswordchannel = 0;
+	size_t _cmdlen = _cmdparse[1].length();
+	while (_indexchannelname < _cmdlen)	
+	{
+		if ( _cmdparse[1].find_first_of(',', _indexchannelname) != std::string::npos)
+		{
+			_channelname = _cmdparse[1].substr(_indexchannelname, _cmdparse[1].find_first_of(',', _indexchannelname) - _indexchannelname);
+			if (_cmdparse[1].size() > 1 && _cmdparse[2].find_first_of(',', _indexpaswordchannel) != std::string::npos)
+			{
+				_passwordchannel = _cmdparse[2].substr(_indexpaswordchannel, _cmdparse[2].find_first_of(',', _indexpaswordchannel));
+				_indexpaswordchannel = _cmdparse[2].find_first_of(',', _indexpaswordchannel) + 1;
+			}
+			_indexchannelname =  _cmdparse[1].find_first_of(',', _indexchannelname) + 1;
+		}
+		else
+		{
+			_channelname = _cmdparse[1].substr(_indexchannelname, _cmdparse[1].length()) ;
+			_indexchannelname = _cmdparse[1].length();
+			_passwordchannel.clear();
+		}
+		if (_channelname[0]  != '#')
+			throw (ERR_NOSUCHCHANNEL(this, user.get_name(), _channelname));
+		Chan *_channel = already_channel(to_upper(_channelname));
+		if (!_channel)
+		{
+			_channel = new Chan(user, _channelname, _passwordchannel);
+			_chan.push_back(_channel);
+			user.set_channel(*_channel);
+			if (!_channel->get_password().empty())
+				std::cout << _channel->get_password() << std::endl;
+		}
+		set_rpl(RPL_JOIN(this, user.get_name(), _channelname));
+		set_rpl(RPL_NAMREPLY(this, user.get_name(), _channel->get_name(), _channel->string_for_rpl()));
+		set_rpl(RPL_ENDOFNAMES(this, user.get_name(), _channel->get_name()));
+	}
 }

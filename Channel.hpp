@@ -21,10 +21,11 @@ class Chan
 		User* _operator;
 
 	public:	
-		Chan(User&, std::string);
+		Chan(User&, std::string, std::string);
 		
 		std::string get_name();
 		User* get_operator();
+		std::string get_password();
 		void add_user(User*);
 		std::string string_for_rpl();
 };

@@ -1,8 +1,9 @@
 #include "Channel.hpp"
 
-Chan::Chan(User& _op, std::string _n) : _name(_n), _operator(&_op)
+Chan::Chan(User& _op, std::string _n, std::string password) : _name(_n), _operator(&_op)
 {
 	_users.insert(std::make_pair(&_op, std::string("@")));
+	_pswd = password;
 	_topic = "";
 	_i = 0;
 	_t = 0;
@@ -19,6 +20,11 @@ std::string Chan::get_name()
 User* Chan::get_operator()
 {
 	return (_operator);
+}
+
+std::string Chan::get_password()
+{
+	return (_pswd);
 }
 
 void Chan::add_user(User* user)
