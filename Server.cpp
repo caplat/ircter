@@ -29,7 +29,7 @@ void Server::set_host()
 	_init.ai_family = AF_INET;
 	_init.ai_flags = AI_PASSIVE;
 	_init.ai_socktype = SOCK_STREAM;
-	int _test = getaddrinfo(0, "4264", &_init, &_host);
+	int _test = getaddrinfo(0, "4263", &_init, &_host);
 	if (_test != 0)
 	{
 		std::cout << errno << std::strerror(errno) << std::endl;
@@ -291,7 +291,7 @@ void Server::parse_order()
 			_nparam++;
 		}
 		if (_cmd.find_first_of(' ', _nparam + 1) != std::string::npos && !twopoint)
-			_cmdparse.push_back(_cmd.substr(_nparam + 1, _cmd.find_first_of(' ', _nparam + 1) - _nparam));
+			_cmdparse.push_back(_cmd.substr(_nparam + 1, _cmd.find_first_of(' ', _nparam + 1) - _nparam - 1));
 		else
 			_cmdparse.push_back(_cmd.substr(_nparam + 1));	
 		_nparam = _cmd.find_first_of(' ', _nparam + 1);
@@ -390,7 +390,10 @@ void Server::run_order(User &user)
 		}
 		case 5:
 		{
-			modeUser(user);
+			if (_cmdparse[1][0] != '#')
+				modeUser(user);
+			else
+				modeChannel(user);
 			break ;
 		}
 		default:
@@ -501,8 +504,6 @@ void Server::modeUser(User &user)
 	user.set_usermode(_mode);
 }
 
-
-
 void Server::join(User &user)
 {
 	if (_cmdparse.size() > 3)
@@ -540,6 +541,12 @@ void Server::join(User &user)
 			user.set_channel(*_channel);
 			if (!_channel->get_password().empty())
 				std::cout << _channel->get_password() << std::endl;
+		}
+		else
+		{
+			//check password
+			//check limit user channel
+			//check ban list
 		}
 		set_rpl(RPL_JOIN(this, user.get_name(), _channelname));
 		set_rpl(RPL_NAMREPLY(this, user.get_name(), _channel->get_name(), _channel->string_for_rpl()));

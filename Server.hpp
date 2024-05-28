@@ -75,6 +75,7 @@ class Server
 		void user(User &);
 		void modeUser(User &);
 		void join(User &);
+		void modeChannel(User &);
 
 };
 std::ostream& operator<<(std::ostream&, Server&); 

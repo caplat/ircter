@@ -9,6 +9,7 @@ class Server;
 #define MAXNICKLEN 20
 #define MAXUSERLEN 20
 #define MAXTOPICLEN 510
+#define MAXUSERCHANNEL 10
 
 
 #define RED_TEXT "\033[1;31m"
@@ -50,6 +51,7 @@ class Server;
 #define RPL_NAMREPLY(server, nick, channel,  str) (BEGIN_RPL(server) + " 353 " + nick + " = " + channel + " :" + str + "\r\n")
 #define RPL_ENDOFNAMES(server, nick, channel) (BEGIN_RPL(server) + " 366 " + nick + " " + channel + " :End of /NAMES list"  + "\r\n")
 #define ERR_NOSUCHCHANNEL(server, nick, channel) (BEGIN_RPL(server) + " 403 " + nick + " " + channel + " :No such channel\r\n")
+#define RPL_CHANNELMODEIS(server, nick, channel, modes, args) (BEGIN_RPL(server) + " 424 " + nick + " " + channel + " " + "modes" + " " + args)
 
 
 #endif

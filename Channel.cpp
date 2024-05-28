@@ -5,10 +5,8 @@ Chan::Chan(User& _op, std::string _n, std::string password) : _name(_n), _operat
 	_users.insert(std::make_pair(&_op, std::string("@")));
 	_pswd = password;
 	_topic = "";
-	_i = 0;
-	_t = 0;
-	_o = 0;
-	_l = 0;
+	_limuser = 0;
+	_mode = "itklb";
 	std::cout << _op.get_name() << std::endl;
 	std::cout << _users.begin()->first->get_name() << std::endl;
 }
@@ -27,6 +25,21 @@ std::string Chan::get_password()
 	return (_pswd);
 }
 
+std::string Chan::get_mode()
+{
+	return (_mode);
+}
+
+void Chan::set_mode(std::string str)
+{
+	_mode = str;
+}
+
+void Chan::add_mode(char c)
+{
+	_mode.push_back(c);
+}
+
 void Chan::add_user(User* user)
 {
 	_users.insert(std::make_pair(user, std::string("")));
@@ -35,9 +48,6 @@ void Chan::add_user(User* user)
 std::string Chan::string_for_rpl()
 {
 	std::string _str = "";
-	std::cout << "HEEEEERRRRRREEEE" << std::endl;
-	std::cout << _users.size() << std::endl;
-	std::cout << _users.begin()->second << "\t";
 	if (_users.size() < 2)
 	{
 		_str += _users.begin()->second;
