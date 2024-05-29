@@ -29,6 +29,7 @@ class Chan
 
 		//setteur
 		void set_mode(std::string);
+		void set_lk(char, std::string);
 		void add_mode(char);
 
 		void add_user(User*);

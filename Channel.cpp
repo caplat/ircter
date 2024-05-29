@@ -35,6 +35,12 @@ void Chan::set_mode(std::string str)
 	_mode = str;
 }
 
+void Chan::set_lk(char c, std::string str)
+{
+	(void)c;
+	(void)str;	
+}
+
 void Chan::add_mode(char c)
 {
 	_mode.push_back(c);
