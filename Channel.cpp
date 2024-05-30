@@ -3,10 +3,15 @@
 Chan::Chan(User& _op, std::string _n, std::string password) : _name(_n), _operator(&_op)
 {
 	_users.insert(std::make_pair(&_op, std::string("@")));
-	_pswd = password;
+	std::cout << "password in chan is: " << password << std::endl;
+	_mode = "";
+	if (!password.empty())
+	{
+		_pswd = password;
+		_mode.push_back('k');
+	}
 	_topic = "";
 	_limuser = 0;
-	_mode = "itklb";
 	std::cout << _op.get_name() << std::endl;
 	std::cout << _users.begin()->first->get_name() << std::endl;
 }
@@ -30,6 +35,21 @@ std::string Chan::get_mode()
 	return (_mode);
 }
 
+size_t Chan::get_limuser()
+{
+	return (_limuser);
+}
+
+std::map<User*, std::string> Chan::get_mapuser()
+{
+	return (_users);
+}
+
+std::vector<User*> Chan::get_banUser()
+{
+	return (_banUser);
+}
+
 void Chan::set_mode(std::string str)
 {
 	_mode = str;
@@ -37,8 +57,10 @@ void Chan::set_mode(std::string str)
 
 void Chan::set_lk(char c, std::string str)
 {
-	(void)c;
-	(void)str;	
+	if (c == 'k')
+		_pswd = str;
+	else if (c == 'l')
+		_limuser = atoi(str.c_str());
 }
 
 void Chan::add_mode(char c)
@@ -62,11 +84,22 @@ std::string Chan::string_for_rpl()
 	}
 	for (_it i = _users.begin(); i != _users.end(); i++)
 	{
-		std::cout << i->second << "\t";
-		_str += _users.begin()->second;
-		_str += _users.begin()->first->get_name();
+		std::cout << i->second << "\n";
+		_str += i->second;
+		_str += i->first->get_name();
 		_str += " ";
 	}
 	std::cout << "built rpl_string : " << _str << std::endl;
 	return (_str);
+}
+
+bool Chan::findbannedUser(User* user)
+{
+	for (size_t i = 0; i < _banUser.size(); i++)
+	{
+		if (user->get_name() == _banUser[i]->get_name())
+		return (1);
+	}
+	return (0);
+	
 }

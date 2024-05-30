@@ -508,8 +508,8 @@ void Server::join(User &user)
 {
 	if (_cmdparse.size() > 3)
 		throw (std::string("too much parameter"));
-	std::string _channelname;
-	std::string _passwordchannel;
+	std::string _channelname = "";
+	std::string _passwordchannel = "";
 	size_t _indexchannelname = 0;
 	size_t _indexpaswordchannel = 0;
 	size_t _cmdlen = _cmdparse[1].length();
@@ -518,18 +518,21 @@ void Server::join(User &user)
 		if ( _cmdparse[1].find_first_of(',', _indexchannelname) != std::string::npos)
 		{
 			_channelname = _cmdparse[1].substr(_indexchannelname, _cmdparse[1].find_first_of(',', _indexchannelname) - _indexchannelname);
-			if (_cmdparse[1].size() > 1 && _cmdparse[2].find_first_of(',', _indexpaswordchannel) != std::string::npos)
+			if (_cmdparse[1].size() > 1 && !_cmdparse[2].empty() && _cmdparse[2].find_first_of(',', _indexpaswordchannel) != std::string::npos)
 			{
-				_passwordchannel = _cmdparse[2].substr(_indexpaswordchannel, _cmdparse[2].find_first_of(',', _indexpaswordchannel));
+				_passwordchannel = _cmdparse[2].substr(_indexpaswordchannel, _cmdparse[2].find_first_of(',', _indexpaswordchannel) - _indexpaswordchannel);
 				_indexpaswordchannel = _cmdparse[2].find_first_of(',', _indexpaswordchannel) + 1;
 			}
 			_indexchannelname =  _cmdparse[1].find_first_of(',', _indexchannelname) + 1;
 		}
 		else
 		{
-			_channelname = _cmdparse[1].substr(_indexchannelname, _cmdparse[1].length()) ;
+			_channelname = _cmdparse[1].substr(_indexchannelname, _cmdparse[1].length() - _indexchannelname);
+			if(!_cmdparse[2].empty())
+				_passwordchannel = _cmdparse[2].substr(_indexpaswordchannel, _cmdparse[2].length() - _indexpaswordchannel);
+			else
+				_passwordchannel.clear();
 			_indexchannelname = _cmdparse[1].length();
-			_passwordchannel.clear();
 		}
 		if (_channelname[0]  != '#')
 			throw (ERR_NOSUCHCHANNEL(this, user.get_name(), _channelname));
@@ -539,17 +542,24 @@ void Server::join(User &user)
 			_channel = new Chan(user, _channelname, _passwordchannel);
 			_chan.push_back(_channel);
 			user.set_channel(*_channel);
-			if (!_channel->get_password().empty())
-				std::cout << _channel->get_password() << std::endl;
+			
 		}
 		else
 		{
-			//check password
-			//check limit user channel
-			//check ban list
+			std::cout << "channel password: " << _channel->get_password() << " compare to password: " << _passwordchannel << std::endl;
+			if (_channel->get_limuser() > 0 && _channel->get_limuser() >= _channel->get_mapuser().size() + 1)
+				throw (ERR_CHANNELISFULL(this, user.get_name(), _channelname));
+			else if (_channel->get_mode().find('i') != std::string::npos)
+				throw (ERR_INVITEONLYCHAN(this, _channel->get_name(), _channelname));
+			else if (!(_channel->get_password().empty()) && _passwordchannel != _channel->get_password())
+				throw (ERR_BADCHANNELKEY(this, user.get_name(), _channelname));
+			else if (_channel->get_banUser().size() > 0 && _channel->findbannedUser(&user))
+				throw(ERR_BANNEDFROMCHAN(this, user.get_name(), _channelname));
+			_channel->add_user(&user);
 		}
 		set_rpl(RPL_JOIN(this, user.get_name(), _channelname));
 		set_rpl(RPL_NAMREPLY(this, user.get_name(), _channel->get_name(), _channel->string_for_rpl()));
 		set_rpl(RPL_ENDOFNAMES(this, user.get_name(), _channel->get_name()));
+		
 	}
 }

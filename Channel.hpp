@@ -11,6 +11,7 @@ class Chan
 	private:
 		std::map<User*, std::string> _users;
 		typedef	std::map<User*, std::string>::iterator _it;
+		std::vector<User*> _banUser;
 		std::string _name;
 		std::string _topic;
 		std::string _pswd;
@@ -26,6 +27,9 @@ class Chan
 		User* get_operator();
 		std::string get_password();
 		std::string get_mode();
+		size_t	get_limuser();
+		std::map<User*, std::string> get_mapuser();
+		std::vector<User*> get_banUser();
 
 		//setteur
 		void set_mode(std::string);
@@ -34,6 +38,10 @@ class Chan
 
 		void add_user(User*);
 		std::string string_for_rpl();
+		std::string rpl_mode();
+
+		//find something
+		bool findbannedUser(User*);
 };
 
 

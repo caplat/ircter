@@ -52,6 +52,10 @@ class Server;
 #define RPL_ENDOFNAMES(server, nick, channel) (BEGIN_RPL(server) + " 366 " + nick + " " + channel + " :End of /NAMES list"  + "\r\n")
 #define ERR_NOSUCHCHANNEL(server, nick, channel) (BEGIN_RPL(server) + " 403 " + nick + " " + channel + " :No such channel\r\n")
 #define RPL_CHANNELMODEIS(server, nick, channel, modes, args) (BEGIN_RPL(server) + " 424 " + nick + " " + channel + " " + "modes" + " " + args)
+#define ERR_BADCHANNELKEY(server, nick, channel) (BEGIN_RPL(server) + " 475 " + nick + " " + channel + " :Cannot join channel (+k)\r\n") 
+#define ERR_CHANNELISFULL(server, nick, channel) (BEGIN_RPL(server) + " 471 " + nick + " " + channel + " :Cannot join channel (+l)\r\n") 
+#define ERR_INVITEONLYCHAN(server, nick, channel) (BEGIN_RPL(server) + " 473 " + nick + " " + channel + " :Cannot join channel (+i)\r\n") 
+#define ERR_BANNEDFROMCHAN(server, nick, channel) (BEGIN_RPL(server) + " 474 " + nick + " " + channel + " :Cannot join channel (+b)\r\n") 
 
 
 #endif

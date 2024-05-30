@@ -39,6 +39,14 @@ void parse_lk(std::vector<std::string> & _cmdparse, Chan *_here, char sign)
 		if (_cmdparse[2].find_first_of("lk") != std::string::npos)
 			_cmdparse[2].erase(_cmdparse[2].find_first_of("lk"), 1);
 	}
+	else if (sign == '-')
+	{
+		if (_cmdparse[2].find('l') != std::string::npos)
+			_here->set_lk('l', "-1");
+		if (_cmdparse[2].find('l') != std::string::npos)
+			_here->set_lk('k', "");
+	}
+
 }
 
 void Server::modeChannel(User &user)
