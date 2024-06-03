@@ -4,8 +4,8 @@ Chan::Chan(User& _op, std::string _n, std::string password) : _name(_n), _operat
 {
 	_users.insert(std::make_pair(&_op, std::string("@")));
 	std::cout << "password in chan is: " << password << std::endl;
-	_mode = "";
-	if (!password.empty())
+	_mode = "t";
+	if (password.empty())
 	{
 		_pswd = password;
 		_mode.push_back('k');
@@ -58,9 +58,17 @@ void Chan::set_mode(std::string str)
 void Chan::set_lk(char c, std::string str)
 {
 	if (c == 'k')
+	{
+	//	if (_mode.find('k') == std::string::npos)
+			//_mode.push_back('k');
 		_pswd = str;
+	}
 	else if (c == 'l')
+	{
+		//if (_mode.find('l') == std::string::npos)
+			//_mode.push_back('l');
 		_limuser = atoi(str.c_str());
+	}
 }
 
 void Chan::add_mode(char c)

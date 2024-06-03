@@ -558,6 +558,7 @@ void Server::join(User &user)
 			_channel->add_user(&user);
 		}
 		set_rpl(RPL_JOIN(this, user.get_name(), _channelname));
+		set_rpl(RPL_MODECHANNELSERVEUR(this, _channel->get_name(), _channel->get_mode()));
 		set_rpl(RPL_NAMREPLY(this, user.get_name(), _channel->get_name(), _channel->string_for_rpl()));
 		set_rpl(RPL_ENDOFNAMES(this, user.get_name(), _channel->get_name()));
 		
