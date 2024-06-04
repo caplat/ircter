@@ -37,6 +37,7 @@ class Chan
 		void add_mode(char);
 
 		void add_user(User*);
+		void addoperator(User*);
 		std::string string_for_rpl();
 		std::string rpl_mode();
 

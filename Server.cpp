@@ -551,7 +551,7 @@ void Server::join(User &user)
 				throw (ERR_CHANNELISFULL(this, user.get_name(), _channelname));
 			else if (_channel->get_mode().find('i') != std::string::npos)
 				throw (ERR_INVITEONLYCHAN(this, _channel->get_name(), _channelname));
-			else if (!(_channel->get_password().empty()) && _passwordchannel != _channel->get_password())
+			else if (_channel->get_mode().find('k') != std::string::npos && !(_channel->get_password().empty()) && _passwordchannel != _channel->get_password())
 				throw (ERR_BADCHANNELKEY(this, user.get_name(), _channelname));
 			else if (_channel->get_banUser().size() > 0 && _channel->findbannedUser(&user))
 				throw(ERR_BANNEDFROMCHAN(this, user.get_name(), _channelname));

@@ -58,16 +58,24 @@ void Chan::set_mode(std::string str)
 void Chan::set_lk(char c, std::string str)
 {
 	if (c == 'k')
-	{
-	//	if (_mode.find('k') == std::string::npos)
-			//_mode.push_back('k');
 		_pswd = str;
-	}
 	else if (c == 'l')
 	{
-		//if (_mode.find('l') == std::string::npos)
-			//_mode.push_back('l');
 		_limuser = atoi(str.c_str());
+		if (_limuser < 0)
+			_limuser = 0;
+	}
+	else if(c == 'o')
+	{
+		for (std::map<User*, std::string>::iterator i = _users.begin(); i != _users.end(); i++)
+		{
+			if (i->first->get_name() == str && i->second.find('@') == std::string::npos)
+			{
+				i->second.push_back('@');
+				break ;
+			}
+		}
+		
 	}
 }
 
