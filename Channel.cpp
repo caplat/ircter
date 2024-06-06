@@ -55,6 +55,11 @@ void Chan::set_mode(std::string str)
 	_mode = str;
 }
 
+std::string Chan::getnewop()
+{
+	return (new_op);
+}
+
 void Chan::set_lk(char c, std::string str)
 {
 	if (c == 'k')
@@ -72,11 +77,22 @@ void Chan::set_lk(char c, std::string str)
 			if (i->first->get_name() == str && i->second.find('@') == std::string::npos)
 			{
 				i->second.push_back('@');
+				new_op = i->first->get_name();
 				break ;
 			}
 		}
 		
 	}
+}
+
+void Chan::send_msg_to(std::vector<int> & fds, int sender)
+{
+	for (_it i = _users.begin(); i != _users.end(); i++)
+	{
+		if (i->first->getpollfd().fd != sender)
+			fds.push_back(i->first->getpollfd().fd);
+	}
+	
 }
 
 void Chan::add_mode(char c)

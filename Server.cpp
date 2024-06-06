@@ -1,11 +1,14 @@
 #include "Server.hpp"
 
-Server::Server()
+Server::Server(std::string pass, std::string port)
 {
 	_poll = NULL;
 	_size_poll = 0;
+	_pass = pass;
+	_port = port;
 	try
 	{
+		check_port();
 		set_host();     	
 		make_sockserv();
 	}
@@ -29,7 +32,7 @@ void Server::set_host()
 	_init.ai_family = AF_INET;
 	_init.ai_flags = AI_PASSIVE;
 	_init.ai_socktype = SOCK_STREAM;
-	int _test = getaddrinfo(0, "4264", &_init, &_host);
+	int _test = getaddrinfo(0, _port.c_str(), &_init, &_host);
 	if (_test != 0)
 	{
 		std::cout << errno << std::strerror(errno) << std::endl;
@@ -80,6 +83,11 @@ void Server::readfds_serv(int fd)
 	User* _us = findUser(fd);
 	long _bytes_r = 1;
 	_bytes_r = recv(fd, _buff_read, _BUFF_SIZE, 0);
+	if (_bytes_r == -1)
+	{
+		std::cout << "i think the socket is closed" << std::endl;
+		return ;
+	}
 	if (_bytes_r == 0)
 	{
 		_users.erase(fd);
@@ -96,14 +104,17 @@ void Server::readfds_serv(int fd)
 	orders(*_us);
 }
 
-void Server::sendfds_serv(int fd)
+void Server::sendfds_serv()
 {
 	for (size_t i = 0; i < _rpl.size(); i++)
 	{
-		if(_rpl[i].size() < 512)
-		{
-			send(fd, _rpl[i].c_str(), _rpl[i].size(), 0);
-			std::cout << GREEN_TEXT << "<<" << _rpl[i] << RESET_TEXT;
+		for (size_t j = 0; j < _sendfd.size(); j++)
+		{	
+			if(_rpl[i].size() < 512)
+			{
+				send(_sendfd[j], _rpl[i].c_str(), _rpl[i].size(), 0);
+				std::cout << GREEN_TEXT << "<<" << _rpl[i] << RESET_TEXT;
+			}
 		}
 	}
 	_rpl.clear();
@@ -121,9 +132,7 @@ void Server::run_serv()
 	{
 		int status = poll(_poll, _size_poll, 2000);
 		if(status  == 0 || status == -1)
-		{
 			continue ;
-		}
 		else if (getRevents() > 0)
 		{
 			int _fd = getRevents();
@@ -213,6 +222,8 @@ void Server::set_channel(Chan* channel)
 	_chan.push_back(channel);
 }
 
+ //check something
+
 Chan* Server::already_channel(std::string str)
 {
 	for (size_t i = 0; i < _chan.size(); i++)
@@ -224,7 +235,14 @@ Chan* Server::already_channel(std::string str)
 	
 }
 
-
+void Server::check_port()
+{
+	for (size_t i = 0; i < _port.size(); i++)
+	{
+		if (!isdigit(_port[i]))
+			throw(std::string("port is not a number"));
+	}
+}
 
 //User
 std::ostream& operator<<(std::ostream & f, Server &s) 
@@ -243,7 +261,7 @@ std::ostream& operator<<(std::ostream & f, Server &s)
 
 int Server::find_cmds()
 {
-	const char* tab[] = {"NICK", "USER", "PING", "PONG", "JOIN", "MODE"};
+	const char* tab[] = {"NICK", "USER", "PING", "PONG", "JOIN", "MODE", "PASS"};
 	std::list<std::string> _cmds(tab, tab + sizeof(tab) / sizeof(char*) );
 	std::list<std::string>::iterator _it;
 	int i = 0;
@@ -328,38 +346,53 @@ void Server::orders(User &user)
 
 void Server::cmds_register(User &user)
 {	
-	switch (find_cmds())
+	_sendfd.push_back(user.getpollfd().fd);
+	try
 	{
-	case 0:
-            nick(user);
+		switch (find_cmds())
+		{
+		case 0:
+	            nick(user);
+				break;
+	    case 1:
+		{
+	           this->user(user);
+	            break ;	
+		}
+		case 6:
+		{
+			pass_cmd(user);
+
+
+		}
+		default:
 			break;
-    case 1:
+		}
+		if (user.getregis())
+		{
+			set_rpl(RPL_WELCOME(this, user.get_name()));
+			set_rpl(RPL_YOURHOST(this, user.get_name()));
+			set_rpl(RPL_CREATED(this, user.get_name()));
+			set_rpl(RPL_MYINFO(this, user.get_name()));
+			set_rpl(RPL_ISUPPORT(this, user.get_name()));
+			set_rpl(RPL_MOTD(this, user.get_name()));
+			set_rpl(RPL_ENDOFMOTD(this, user.get_name()));
+		}
+	}
+	catch(std::string & e)
 	{
-           this->user(user);
-			sendfds_serv(user.getpollfd().fd);
-            break ;	
+		set_rpl(e);
 	}
-	default:
-		break;
-	}
-	if (user.getregis())
-	{
-		set_rpl(RPL_WELCOME(this, user.get_name()));
-		set_rpl(RPL_YOURHOST(this, user.get_name()));
-		set_rpl(RPL_CREATED(this, user.get_name()));
-		set_rpl(RPL_MYINFO(this, user.get_name()));
-		set_rpl(RPL_ISUPPORT(this, user.get_name()));
-		set_rpl(RPL_MOTD(this, user.get_name()));
-		set_rpl(RPL_ENDOFMOTD(this, user.get_name()));
-		sendfds_serv(user.getpollfd().fd);
-	}
+	sendfds_serv();
 	_cmd.clear();
 	_cmdparse.clear();
+	_sendfd.clear();
 }
 
 
 void Server::run_order(User &user)
 {
+	_sendfd.push_back(user.getpollfd().fd);
 	try
 	{
 		switch (find_cmds())
@@ -399,16 +432,18 @@ void Server::run_order(User &user)
 		default:
 			break;
 		}
-		sendfds_serv(user.getpollfd().fd);
+		sendfds_serv();
 		_cmd.clear();
 		_cmdparse.clear();
+		_sendfd.clear();
 	}
 	catch(std::string &what)
 	{
 		set_rpl(what);
-		sendfds_serv(user.getpollfd().fd);
+		sendfds_serv();
 		_cmd.clear();
 		_cmdparse.clear();
+		_sendfd.clear();
 	}
 }
 
@@ -416,6 +451,8 @@ void Server::nick(User &user)
 {
     size_t _index = 0;
 	std::string _valid = "\\[]{}";
+	if (!user.getflag())
+		return ;
 	if (_cmdparse.size() < 2 || _index == std::string::npos || isdigit(_cmdparse[1][_index + 1]))
 		throw (ERR_NONICKNAMEGIVEN(this, user.get_name()));
     while (++_index < _cmd.size())
@@ -437,6 +474,8 @@ void Server::nick(User &user)
 
 void Server::user(User &user)
 {
+	if (!user.getflag())
+		return ;
 	if (_cmdparse.size() < 5)
 	{
 		std::cout << "you forgot the parameter" << std::endl;
@@ -450,7 +489,9 @@ void Server::user(User &user)
 		std::cout << "Realname: " << _cmdparse[4] << std::endl;
 	}
 	if(!user.get_name().empty() && !user.get_username().empty())
+	{
 		user.setregis();
+	}
 }
 
 void Server::modeUser(User &user)
@@ -563,4 +604,17 @@ void Server::join(User &user)
 		set_rpl(RPL_ENDOFNAMES(this, user.get_name(), _channel->get_name()));
 		
 	}
+}
+
+
+void Server::pass_cmd(User &user)
+{
+	if (_cmdparse.size() < 2)
+		throw(ERR_NEEDMOREPARAMS(user.get_name(), this));
+	if (user.getregis() == 1)
+		throw(ERR_ALREADYREGISTERED(user.get_name(), this));
+	if (_cmdparse[1] != _pass)
+		throw(ERR_PASSWDMISSMATCH(user.get_name(), this));
+	user.setflag(1);
+
 }

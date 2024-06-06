@@ -47,7 +47,7 @@ void parse_lk(std::vector<std::string> & _cmdparse, Chan *_here, char sign)
 	}
 }
 
-std::string rplLK(std::string str, Chan* _here)
+std::string rplLKO(std::string str, Chan* _here)
 {
 	std::string _rpl = "";
 	if (std::string("lko").find_first_of(str) == 0)
@@ -61,10 +61,10 @@ std::string rplLK(std::string str, Chan* _here)
 		_rpl.push_back(' ');
 		_rpl += _here->get_password();
 	}
-	if (std::string("lko").find_last_of(str) == 1)
+	if (std::string("lko").find_last_of(str) == 2)
 	{
 		_rpl.push_back(' ');
-		_rpl += _here->get_password();
+		_rpl += _here->getnewop();
 	}
 	return (_rpl);
 }
@@ -86,7 +86,7 @@ void Server::modeChannel(User &user)
 	if (_cmdparse.size() == 2)
 	{
 		std::cout << "No mode" << std::endl;
-		throw(RPL_CHANNELMODEIS(this, user.get_name(), _here->get_name(), _here->get_mode(), rplLK(_here->get_mode(), _here)));
+		throw(RPL_CHANNELMODEIS(this, user.get_name(), _here->get_name(), _here->get_mode(), rplLKO(_here->get_mode(), _here)));
 	}
 	_index = _cmdparse[2].find_first_not_of("+-", _index);	
 	while (_index != std::string::npos && _sign != '\0')
@@ -104,9 +104,10 @@ void Server::modeChannel(User &user)
 		std::cout << "new channel mode: " << _here->get_mode() << std::endl;
 		_index = _cmdparse[2].find_first_not_of("+-", _index++);	
 	}
-	_rpl += rplLK(_cmdparse[2], _here);
+	_rpl += rplLKO(_cmdparse[2], _here);
 	if (!_rpl.empty())
 	{
+		_here->send_msg_to(_sendfd, user.getpollfd().fd);
 		set_rpl(RPL_MODECHANNEL(user.get_name(), _here->get_name(), _rpl));
 	}
 }

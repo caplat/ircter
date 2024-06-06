@@ -25,13 +25,16 @@ class Server
 		pollfd* _poll;
 		size_t _size_poll;
 		std::vector<std::string> _rpl;
+		std::vector<int> _sendfd;
 		std::string _bufferread;
 		std::string _cmd;
 		std::vector<std::string> _cmdparse;
+		std::string _pass;
+		std::string _port;
 
 	public:
 		//constructor
-		Server();
+		Server(std::string, std::string);
 		~Server();
 
 		//get something
@@ -47,6 +50,7 @@ class Server
 
 		//Check something
 		Chan* already_channel(std::string);
+		void check_port();
 
 		//make/set/run/build something
 		void set_channel(Chan*);
@@ -57,7 +61,7 @@ class Server
 		//Read/Write/Connection socket
 		void run_serv();
 		void readfds_serv(int);
-		void sendfds_serv(int);
+		void sendfds_serv();
 		void accept_conection_serv();
 		void set_rpl(std::string);
 		void clear_rpl();
@@ -76,6 +80,7 @@ class Server
 		void modeUser(User &);
 		void join(User &);
 		void modeChannel(User &);
+		void pass_cmd(User &);
 
 };
 std::ostream& operator<<(std::ostream&, Server&); 

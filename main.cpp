@@ -5,17 +5,16 @@
 #include "Server.hpp"
 
 int main(int argc, char** argv)
-{
-	(void) argc;
-	(void) argv;
-	
+ {
 	try
 	{
-		Server _s; 
+		if (argc != 3)
+			throw(std::string("Verify you exec like this: ./ircserv <port> <password>"));
+		Server _s(argv[2], argv[1]); 
 		std::cout << getlogin() << std::endl;
 		_s.run_serv();
 	}
-	catch(int e)
+	catch(std::string e)
 	{
 		std::cerr << e << '\n';
 	}

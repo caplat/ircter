@@ -18,6 +18,7 @@ class Chan
 		size_t _limuser;
 		std::string _mode;
 		User* _operator;
+		std::string new_op;
 
 	public:	
 		Chan(User&, std::string, std::string);
@@ -30,11 +31,13 @@ class Chan
 		size_t	get_limuser();
 		std::map<User*, std::string> get_mapuser();
 		std::vector<User*> get_banUser();
+		std::string getnewop();
 
 		//setteur
 		void set_mode(std::string);
 		void set_lk(char, std::string);
 		void add_mode(char);
+		void send_msg_to(std::vector<int>&, int);
 
 		void add_user(User*);
 		void addoperator(User*);

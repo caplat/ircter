@@ -38,6 +38,11 @@ Server* User::getServer()
     return (_server);
 }
 
+bool User::getflag()
+{
+	return (_flag);
+}
+
 
 std::string User::get_name()
 {
@@ -84,4 +89,8 @@ void User::setstr(char * str)
     _str.append(str);
 }
 
+void User::setflag(bool val)
+{
+	_flag = val;
+}
 

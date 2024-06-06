@@ -27,6 +27,7 @@ class User
         pollfd _fd;
         int _regis;
         Server * _server;
+		bool _flag;
 
     public:
         User(int, Server &);
@@ -42,6 +43,7 @@ class User
 		std::string get_username();
 		std::string get_usermode();
 		Chan* get_channel(std::string);
+		bool getflag();
 
         void setstr(char*);
 		void set_name(std::string &);
@@ -49,6 +51,7 @@ class User
 		void set_realname(std::string &);
 		void set_usermode(std::string &);
 		void set_channel(Chan &);
+		void setflag(bool);
 };
 
 
