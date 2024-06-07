@@ -83,4 +83,9 @@ template <typename T>
 #define ERR_ALREADYREGISTERED(nick, server) (BEGIN_RPL(server) + ": 462 " + nick + " :You may not reregister !\r\n")
 #define ERR_PASSWDMISSMATCH(nick, server) (BEGIN_RPL(server) + ": 464 " + nick + " :Password incorrect !\r\n")
 
+//Privmsg
+#define ERR_NOSUCHNICK(nickname, server) (BEGIN_RPL(server) + ": 401 " + nickname + " :No such nick/channel." + "\r\n")
+#define PRIV_MSG_TO_USER(sender, receiver, msg) (":" + sender.get_name() + " PRIVMSG " + receiver->get_name()+ " :" + msg + "\r\n")
+#define PRIV_MSG_TO_CHANNEL(sender, channel, msg) (":" + sender.get_name() + " PRIVMSG " + channel->get_name() + " :" + msg + "\r\n")
+
 #endif

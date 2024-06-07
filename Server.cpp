@@ -261,13 +261,13 @@ std::ostream& operator<<(std::ostream & f, Server &s)
 
 int Server::find_cmds()
 {
-	const char* tab[] = {"NICK", "USER", "PING", "PONG", "JOIN", "MODE", "PASS"};
+	const char* tab[] = {"NICK", "USER", "PING", "PONG", "JOIN", "MODE", "PASS", "PRIVMSG"};
 	std::list<std::string> _cmds(tab, tab + sizeof(tab) / sizeof(char*) );
 	std::list<std::string>::iterator _it;
 	int i = 0;
 	for (_it = _cmds.begin(); _it != _cmds.end(); _it++)
 	{
-		if (_cmd.compare(0, 4, *_it) == 0)
+		if (_cmdparse[0].compare(0, _cmdparse[0].size(), *_it) == 0)
 			return (i);
 		i++;
 	}
@@ -362,8 +362,6 @@ void Server::cmds_register(User &user)
 		case 6:
 		{
 			pass_cmd(user);
-
-
 		}
 		default:
 			break;
@@ -418,6 +416,7 @@ void Server::run_order(User &user)
 		}
 		case 4:
 		{
+			std::cout << "join " << std::endl;
 			join(user);
 			break ;
 		}
@@ -428,6 +427,11 @@ void Server::run_order(User &user)
 			else
 				modeChannel(user);
 			break ;
+		}
+		case 7:
+		{
+			std::cout << "privmsg" << std::endl;
+			privateMsg(user);
 		}
 		default:
 			break;

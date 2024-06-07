@@ -46,6 +46,9 @@ class Chan
 
 		//find something
 		bool findbannedUser(User*);
+
+		//privmsg
+		// const std::map<User*, std::string> &get_users() const { return _users; }
 };
 
 
