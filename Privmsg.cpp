@@ -2,7 +2,7 @@
 
 void Server::privateMsg(User &sender){
 
-    std::string msg = concatenateStr(2);
+    std::string msg = _cmdparse[2];
     if(findReceiver() == 0)
     {
         // send_message(sender.getsock(), ERR_NOSUCHNICK(_cmdparse[1], this));
@@ -64,18 +64,4 @@ Chan* Server::findChannelName(const std::string& channel_name) {
         }
     }
     return nullptr;
-}
-
-std::string Server::concatenateStr(size_t startIndex) {
-    std::string concatenated;
-    if (startIndex >= _cmdparse.size()) {
-        return concatenated;
-    }
-    for (size_t i = startIndex; i < _cmdparse.size(); ++i) {
-        if (i != startIndex) {
-            concatenated += " ";
-        }
-        concatenated += _cmdparse[i];
-    }
-    return concatenated;
 }

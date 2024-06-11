@@ -430,7 +430,7 @@ void Server::run_order(User &user)
 		}
 		case 7:
 		{
-			std::cout << "privmsg" << std::endl;
+			// std::cout << "privmsg" << std::endl;
 			privateMsg(user);
 		}
 		default:

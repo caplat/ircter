@@ -86,7 +86,6 @@ class Server
 		void privateMsg(User &);
 		int findReceiver();
 		Chan* findChannelName(const std::string &);
-		std::string concatenateStr(size_t startIndex);
 
 };
 std::ostream& operator<<(std::ostream&, Server&); 
